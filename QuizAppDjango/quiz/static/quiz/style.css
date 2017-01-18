@@ -1,0 +1,336 @@
+/* imports für heading und paragraph css Dateien */
+@import "heading.css";
+@import "paragraph.css";
+
+/* Style für den body in den html dateien*/
+body{
+background: #d8dfea;
+text-align: center;
+	vertical-align: middle;
+}
+/* Style für den div Block mit id=webseite */
+#webseite{
+    float: left;
+    width: 100%;
+    min-width: 420px;
+	max-width: 2000px;
+	height: 100%;
+	align-content: center;
+	margin-top: auto;
+	margin-bottom: auto;
+}
+/* Style für den div Block mit id=header */
+#header {
+    width: 80%;
+    min-width: 420px;
+	max-width: 2000px;
+    height: 80%;
+    min-height: 80px;
+	max-height: 300px;
+	background: #3b5998;
+	border-radius: 30px;
+	-moz-border-radius: 30px;
+	-webkit-border-radius: 30px;
+	margin-left: auto;
+	margin-right: auto;
+
+
+
+}
+/* Style für alle h2 Schriftgrößen in dem div Block mit id=header */
+#header h2{
+	vertical-align: middle;
+	font-family: "AR DARLING";
+	font-size: 60px;
+	font-weight: bold;
+	color: white;
+}
+
+/*#main {
+    width: 80%;
+    min-width: 300px;
+	max-width: 3000px;
+}*/
+
+/*#menu {
+	float: left;
+    width: 80%;
+    min-width: 270px;
+	max-width: 350px;
+    height: 80%;
+    min-height: 320px;
+	max-height: 400px;
+	background: #286090;
+	margin-top: 10px;
+	margin-bottom: 10px;
+	border-radius: 2px;
+	-moz-border-radius: 2px;
+	-webkit-border-radius: 2px;
+}*/
+
+/* Style für den div Block mit id= inhalt*/
+#inhalt{
+    float: right;
+    width: 80%;
+    min-width: 420px;
+	max-width: 2000px;
+    height: 100%;
+    min-height: 300px;
+	max-height: 30000px;
+	background: #afbdd4;
+	margin-top: 5px;
+	margin-bottom: 5px;
+	margin-left: auto;
+    margin-right: auto;
+	margin-right: 10%;
+	margin-inside: 20px;
+}
+/* Style für alle h1,h2,h3 und h4 Schriftgrößen im inhalt div Block */
+#inhalt h3, h1 , h2, h4{
+	vertical-align: middle;
+	font-family: "AR DARLING";
+	font-size: 40px;
+	font-weight: bold;
+	color: white;
+}
+
+/* Style für h5 Schriftgrößen im inhalt div Block */
+#inhalt h5{
+	vertical-align: middle;
+	font-family: "AR DARLING";
+	font-size: 22px;
+	font-weight: bold;
+	color: white;
+}
+
+#header a{
+	align-content: flex-start;
+}
+/* Style für den footer div Block */
+#footer {
+    float: right;
+    width: 80%;
+    min-width: 420px;
+	max-width: 2000px;
+	height: 80%;
+	min-height: 30px;
+	max-height: 40px;
+	background: #afbdd4;
+	-webkit-border-bottom-right-radius: 30px;
+    -webkit-border-bottom-left-radius: 30px;
+	-moz-border-radius-bottomleft: 30px;
+    -moz-border-radius-bottomright: 30px;
+	margin-left: auto;
+	margin-right: 10%;
+
+}
+/* Style für alle inputs mit dem type=button  */
+input[type=button] {
+	width: 30%;
+	background-color: #3b5998;
+	color: white;
+	padding: 14px 20px;
+    font-size: larger;
+	border: none;
+	border-radius: 4px;
+	cursor: pointer;
+	vertical-align: middle;
+	margin-top: 2%;
+}
+/* hover Style für inputs mit dem type=button */
+input[type=button]:hover {
+    background-color: #6d84b4;
+}
+/* Style für alle inputs mit dem type=text */
+input[type=text], select {
+    width: 90%;
+    padding: 12px 20px;
+    display: inline-block;
+    font-size: larger;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    box-sizing: border-box;
+	vertical-align: middle;
+	margin-top: 10px;
+}
+
+
+
+/*input[type=submit] {
+    width: 90%;
+    background-color: #54bd7a;
+    color: white;
+    padding: 14px 20px;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+	vertical-align: middle;
+	margin-top: 2%;
+}*/
+
+/* Style für alle inputs mit dem type=submit */
+input[type=submit] {
+    width: 90%;
+    color: white;
+    background-color: #3b5998;
+    font-size: larger;
+    padding: 14px 20px;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+	vertical-align: middle;
+	margin-top: 5px;
+	margin-bottom: 5px;
+}
+/* hover Style für alle inputs mit dem type=text */
+input[type=submit]:hover {
+    background-color: #3b5998;
+}
+/* Style für alle inputs mit der id=auswahl */
+input[id=auswahl] {
+    width: 30%;
+    font-size: larger;
+    color: white;
+    background-color: #3b5998;
+    padding: 14px 20px;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    vertical-align: middle;
+    margin-top: 10px;
+}
+/* Style für alle inputs mit der id=bearbeiten */
+input[id=bearbeiten] {
+    width: 45%;
+    background-color: #3b5998;
+    color: white;
+    padding: 14px 20px;
+    font-size: larger;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+	vertical-align: middle;
+	margin-top: 10px;
+}
+/* Style für die Navigationsbar */
+ul.topnav {
+    list-style-type: none;
+    margin: 0;
+    padding: 0;
+    overflow: hidden;
+    background-color: #6d84b4;
+}
+
+/* Float the list items side by side */
+ul.topnav li {float: left;}
+
+/* Style für die links in der liste */
+ul.topnav li a {
+    display: inline-block;
+    color: #f2f2f2;
+    text-align: center;
+    padding: 14px 16px;
+    text-decoration: none;
+    transition: 0.3s;
+    font-size: 17px;
+}
+
+/* hover Style für die Navigationsbar */
+ul.topnav li a:hover {background-color: #3b5998;}
+
+
+ul.topnav li.icon {display: none;}
+
+
+
+/* Style für alle inputs mit der id=search_submit */
+input[id=search_submit] {
+    width: 12.5%;
+    color: white;
+    font-size: larger;
+    background-color: #3b5998;
+    padding: 14px 20px;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+	vertical-align: middle;
+	margin-top: 15px;
+}
+/* Style für alle inputs mit der id=zuruck */
+input[id=zuruck] {
+    width: 12.5%;
+    color: white;
+    background-color: #3b5998;
+    padding: 14px 20px;
+    border: none;
+    font-size: larger;
+    border-radius: 4px;
+    cursor: pointer;
+	vertical-align: middle;
+	margin-top: 15px;
+}
+/* Style für alle buttons mit der id=zuruck */
+button[id=zuruck] {
+    width: 12.5%;
+    background-color: #3b5998;
+    color: white;
+    padding: 14px 20px;
+    border: none;
+    font-size: larger;
+    border-radius: 4px;
+    cursor: pointer;
+	vertical-align: middle;
+	margin-top: 10px;
+}
+
+/* Style für alle inputs mit der id=search_box */
+input[id=search_box]{
+    width: 65%;
+    padding: 12px 20px;
+    display: inline-block;
+    font-size: larger;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    box-sizing: border-box;
+	vertical-align: middle;
+	margin-top: 10px;
+}
+
+/* Style für den div Block mit class=unten */
+.unten {
+ float: left;
+ width: 56%;
+ margin-right: 2%;
+ padding: 20px;
+ box-sizing: border-box;
+}
+
+/* Style für den div Block mit class=unten2 */
+.unten2 {
+ float: left;
+ width: 36%;
+ margin-right: 2%;
+ padding: 20px;
+ box-sizing: content-box;
+}
+/* Style für alle Tabellen im Projekt mit class=Tab */
+.Tab{
+    border: 5px;
+}
+/* Style für alle Tabellenspalten im Projekt mit class=Feld */
+.Feld{
+    width: 45px;
+    margin-right: 2px;
+}
+/* Style für alle Tabellenspalten im Projekt mit class=Feld2 */
+.Feld2{
+    width: 370px;
+    word-break: break-all;
+}
+/* Style für alle Tabellenspalten im Projekt mit class=Feld3 */
+.Feld3{
+    width: 440px;
+    word-break: break-all;
+
+}
+

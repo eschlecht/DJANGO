@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    {% load staticfiles %}
+    <link rel="stylesheet" href="//maxcdn.bootstrapcdn.com/bootstrap/3.2.0/css/bootstrap.min.css">
+    <link rel="stylesheet" href="//maxcdn.bootstrapcdn.com/bootstrap/3.2.0/css/bootstrap-theme.min.css">
+     <link rel="stylesheet"  href="{% static '/quiz/style.css' %}">
+    <meta charset="UTF-8">
+
+<style>
+        {% include "quiz/Dropdown.html" %}
+
+        @media screen and (max-width:680px) {
+  ul.topnav li:not(:first-child) {display: none;}
+  ul.topnav li.icon {
+    float: right;
+    display: inline-block;
+  }
+}
+
+@media screen and (max-width:680px) {
+  ul.topnav.responsive {position: relative;}
+  ul.topnav.responsive li.icon {
+    position: absolute;
+    right: 0;
+    top: 0;
+  }
+  ul.topnav.responsive li {
+    float: none;
+    display: inline;
+  }
+  ul.topnav.responsive li a {
+    display: block;
+    text-align: left;
+  }
+}
+    </style>
+
+</head>
+<body>
+<script>
+
+    function myFunction() {
+    var x = document.getElementById("myTopnav");
+    if (x.className === "topnav") {
+        x.className += " responsive";
+    } else {
+        x.className = "topnav";
+    }
+}
+</script>
+        <div id="webseite" >
+            <div id="header">
+
+                {% include "quiz/Navi.html" %}
+
+            </div>
+            <div id="main">
+                <div id="inhalt">
+                    <br>
+                    <h1> {{ question.multi_question_text }} </h1>
+
+
+<form method="get" action="."><br>
+<script>
+
+
+
+
+
+
+
+</script>
+
+                        <input id="answer_1" type=checkbox value=1 name="checks1">
+                        <label for="answer_1"> {{ question.answer_text1 }}</label><br>
+
+                        <input id="answer_2" type=checkbox value=1 name="checks2">
+
+                        <label for="answer_2"> {{ question.answer_text2 }}</label><br>
+
+                        <input id="answer_3" type=checkbox value=1 name="checks3">
+                        <label for="answer_3"> {{ question.answer_text3 }}</label><br>
+
+                        <input id="answer_4" type=checkbox value=1 name="checks4">
+                        <label for="answer_4"> {{ question.answer_text4 }}</label><br>
+
+
+                        {% if r %}
+                        <div class="alert alert-success">
+                        <strong>Super!</strong> Die Antwort war richtig.
+                            </div>
+                        <input id="Weiter1" title="nächste Frag beantworten" type=submit value="Weiter" name="Weiter">
+                        {% elif f %}
+                        <div class="alert alert-danger">
+                        <strong>Schade!</strong> Die Antwort war leider Falsch.
+                        </div>
+                        <input id="Weiter2" title="nächste Frag beantworten" type=submit value="Weiter" name="Weiter">
+
+
+
+
+
+
+
+    {% else %}
+   <input id="verifyAnswer" type=submit value="Fertig" name="Fertig"><br>
+{% endif %}
+
+
+
+
+
+                    </form>
+
+                </div>
+            </div>
+            <div id="footer">
+
+            </div>
+        </div>
+
+
+</body>
+
+</html>

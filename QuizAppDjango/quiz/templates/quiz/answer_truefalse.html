@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    {% load staticfiles %}
+    <link rel="stylesheet" href="//maxcdn.bootstrapcdn.com/bootstrap/3.2.0/css/bootstrap.min.css">
+    <link rel="stylesheet" href="//maxcdn.bootstrapcdn.com/bootstrap/3.2.0/css/bootstrap-theme.min.css">
+     <link rel="stylesheet"  href="{% static '/quiz/style.css' %}">
+    <meta charset="UTF-8">
+
+<style>
+
+        {% include "quiz/Dropdown.html" %}
+
+        @media screen and (max-width:680px) {
+  ul.topnav li:not(:first-child) {display: none;}
+  ul.topnav li.icon {
+    float: right;
+    display: inline-block;
+  }
+}
+
+@media screen and (max-width:680px) {
+  ul.topnav.responsive {position: relative;}
+  ul.topnav.responsive li.icon {
+    position: absolute;
+    right: 0;
+    top: 0;
+  }
+  ul.topnav.responsive li {
+    float: none;
+    display: inline;
+  }
+  ul.topnav.responsive li a {
+    display: block;
+    text-align: left;
+  }
+}
+    </style>
+
+</head>
+<body>
+<script>
+
+
+    function myFunction() {
+    var x = document.getElementById("myTopnav");
+    if (x.className === "topnav") {
+        x.className += " responsive";
+    } else {
+        x.className = "topnav";
+    }
+}
+</script>
+
+        <div id="webseite" >
+            <div id="header">
+
+                {% include "quiz/Navi.html" %}
+
+            </div>
+            <div id="main">
+                <div id="inhalt">
+                    <br>
+                    <script>
+
+//Voll wichtig, ned lösche wege Progressbar
+
+</script>
+                    <div class="progress">
+  <div id = 'progressBar' class="progress-bar progress-bar-striped active" role="progressbar" aria-valuenow="100" aria-valuemin="0" aria-valuemax="100" style="width: 0%;">
+    <script src="//code.jquery.com/jquery-1.11.0.min.js"></script>
+      {% with pz=punktzahl s=stand %}
+      <p>{{stand}}</p>
+    <script> $("#progressBar").css("width","{{prozent}}%"); </script>
+      {% endwith %}
+  </div>
+</div>
+                    <h1> {{ question.tf_question_text }} </h1>
+                        <form method="get" action="."><br>
+
+
+                            {% if r %}
+                            <div class="alert alert-success">
+                        <strong>Super!</strong> Die Antwort war richtig. <br> Du bekommst {{punktzahl}} Punkt(e)
+                            </div>
+                            <input id="Weiter1" title="nächste Frag beantworten/Quiz beenden" type=submit value="Weiter" name="Weiter">
+
+                            {% elif f %}
+                            <div class="alert alert-danger">
+                        <strong>Schade!</strong> Die Antwort war leider Falsch.
+                            </div><
+                            <input id="Weiter2" title="nächste Frag beantworten/Quiz beenden" type=submit value="Weiter" name="Weiter">
+
+                            {% else %}
+                           <input id="verifyAnswer1" title="die Frage ist Wahr" type=submit value="wahr" name="Fertig">
+                            <input id="verifyAnswer2" title="die Frage ist Falsch" type=submit value="falsch" name="Fertig">
+                        {% endif %}
+
+                        </form>
+
+
+                    <br>
+                </div>
+            </div>
+            <div id="footer">
+
+            </div>
+        </div>
+
+
+</body>
+</html>
+

@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    {% load staticfiles %}
+    <link rel="stylesheet" href="//maxcdn.bootstrapcdn.com/bootstrap/3.2.0/css/bootstrap.min.css">
+    <link rel="stylesheet" href="//maxcdn.bootstrapcdn.com/bootstrap/3.2.0/css/bootstrap-theme.min.css">
+     <link rel="stylesheet"  href="{% static '/quiz/style.css' %}">
+    <meta charset="UTF-8">
+    <title>Update Question</title>
+
+<style>
+
+        {% include "quiz/Dropdown.html" %}
+
+        @media screen and (max-width:680px) {
+  ul.topnav li:not(:first-child) {display: none;}
+  ul.topnav li.icon {
+    float: right;
+    display: inline-block;
+  }
+}
+
+@media screen and (max-width:680px) {
+  ul.topnav.responsive {position: relative;}
+  ul.topnav.responsive li.icon {
+    position: absolute;
+    right: 0;
+    top: 0;
+  }
+  ul.topnav.responsive li {
+    float: none;
+    display: inline;
+  }
+  ul.topnav.responsive li a {
+    display: block;
+    text-align: left;
+  }
+}
+    </style>
+
+</head>
+<body>
+<script>
+
+    function myFunction() {
+    var x = document.getElementById("myTopnav");
+    if (x.className === "topnav") {
+        x.className += " responsive";
+    } else {
+        x.className = "topnav";
+    }
+}
+</script>
+        <div id="webseite" >
+            <div id="header">
+
+                {% include "quiz/Navi.html" %}
+
+            </div>
+            <div id="main">
+                <div id="inhalt">
+                    <br>
+                    <h2>Fragen bearbeiten</h2>
+                    <ul>
+                        <form type="get" action="." style="margin: 0">
+                            <input id="search_box" title="Geben Sie den Namen einer Frage ein" type="text" name="search_box" placeholder="Fragen durchsuchen..." >
+                            <input id="search_submit" title="Frage suchen" type="submit" value="Suchen" name="Suchen" >
+                            <button  id="zuruck" title="Die Suche zurücksetzen" value="Suche zurücksetzen" href="/quiz_select/">zurücksetzen</button>
+                        </form>
+                        {% if delete %}
+
+
+                            <br>
+                            <div class="alert alert-success">
+                            Die Frage <strong>{{deleted_question}}</strong> wurde gelöscht.
+                            </div>
+
+
+
+                            {% endif %}
+                        <br>
+                        {% for TFQuestion in tquestion %}
+                            {{ TFQuestion.tf_question_text }}
+                            <input type="button" title="Löschen Sie die Frage" onclick="location.href='/quiz/delete_tfquestion/{{TFQuestion.id}}/'" value="Löschen"/>
+                            <input type="button" title="Bearbeiten Sie die Frage" onclick="location.href='/quiz/add_question/{{TFQuestion.id}}/'" value="Bearbeiten"/>
+
+                            <br>
+                        {% endfor %}
+                        {% for EssayQuestion in equestion %}
+                            {{ EssayQuestion.essay_question_text }}
+                            <input type="button" title="Löschen Sie die Frage" onclick="location.href='/quiz/delete_essayquestion/{{EssayQuestion.id}}/'" value="Löschen"/>
+                            <input type="button" title="Bearbeiten Sie die Frage" onclick="location.href='/quiz/add_question/{{EssayQuestion.id}}/'" value="Bearbeiten"/>
+
+                            <br>
+                        {% endfor %}
+                        {% for SingleChoiceQuestion in squestion %}
+                            {{ SingleChoiceQuestion.single_question_text }}
+                            <input type="button" title="Löschen Sie die Frage" onclick="location.href='/quiz/delete_singlechoicequestion/{{SingleChoiceQuestion.id}}/'" value="Löschen"/>
+                            <input type="button" title="Bearbeiten Sie die Frage" onclick="location.href='/quiz/add_question/{{SingleChoiceQuestion.id}}/'" value="Bearbeiten"/>
+
+                            <br>
+                        {% endfor %}
+                        {% for MultipleChoiceQuestion in mquestion %}
+                            {{ MultipleChoiceQuestion.multi_question_text }}
+                            <input type="button" title="Löschen Sie die Frage" onclick="location.href='/quiz/delete_multiplechoicequestion/{{MultipleChoiceQuestion.id}}/'" value="Löschen"/>
+                            <input type="button" title="Bearbeiten Sie die Frage" onclick="location.href='/quiz/add_question/{{MultipleChoiceQuestion.id}}/'" value="Bearbeiten"/>
+
+                            <br>
+                        {% endfor %}
+                    </ul>
+                </div>
+            </div>
+            <div id="footer">
+
+
+            </div>
+        </div>
+</body>

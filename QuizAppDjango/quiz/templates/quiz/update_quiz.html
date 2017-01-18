@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    {% load staticfiles %}
+    <link rel="stylesheet" href="//maxcdn.bootstrapcdn.com/bootstrap/3.2.0/css/bootstrap.min.css">
+    <link rel="stylesheet" href="//maxcdn.bootstrapcdn.com/bootstrap/3.2.0/css/bootstrap-theme.min.css">
+     <link rel="stylesheet"  href="{% static '/quiz/style.css' %}">
+    <meta charset="UTF-8">
+    <title>Update Quiz</title>
+
+<style>
+
+        {% include "quiz/Dropdown.html" %}
+
+        @media screen and (max-width:680px) {
+  ul.topnav li:not(:first-child) {display: none;}
+  ul.topnav li.icon {
+    float: right;
+    display: inline-block;
+  }
+}
+
+@media screen and (max-width:680px) {
+  ul.topnav.responsive {position: relative;}
+  ul.topnav.responsive li.icon {
+    position: absolute;
+    right: 0;
+    top: 0;
+  }
+  ul.topnav.responsive li {
+    float: none;
+    display: inline;
+  }
+  ul.topnav.responsive li a {
+    display: block;
+    text-align: left;
+  }
+}
+    </style>
+
+</head>
+<body>
+<script>
+
+    function myFunction() {
+    var x = document.getElementById("myTopnav");
+    if (x.className === "topnav") {
+        x.className += " responsive";
+    } else {
+        x.className = "topnav";
+    }
+}
+</script>
+
+
+        <div id="webseite" >
+            <div id="header">
+
+                {% include "quiz/Navi.html" %}
+
+            </div>
+            <div id="main">
+                <div id="inhalt">
+                    <br>
+                    <h2>Quiz bearbeiten</h2>
+                    <ul>
+                        <form type="get" action="." style="margin: 0">
+                            <input id="search_box" type="text" title="Geben sie den Namen eines Quiz ein" name="search_box" placeholder="Kurse durchsuchen..." />
+                            <input id="search_submit" type="submit" title="Suchen sie nach Ihrem eingegebenen Quiz" value="Suchen" name="Suchen" />
+                            <button  id="zuruck" value="Suche zurücksetzen" title="kehren sie zu den Einstellungen zurück" href="/quiz_select/">zurücksetzen</button>
+
+                        </form>
+                        {% if delete %}
+
+
+                            <br>
+                            <div class="alert alert-success">
+                            Das Quiz <strong>{{deleted_quiz}}</strong> wurde gelöscht.
+                            </div>
+
+
+
+                            {% endif %}
+                        <br>
+
+                        {% for quiz in all_quiz %}
+                        <li>
+                            {{ quiz.quiz_title }}
+                            <input type="button" title="Löschen sie das Quiz" onclick="location.href='/quiz/delete_quiz/{{quiz.id}}/'" value="Löschen"/>
+                            <input type="button" title="Bearbeiten sie das Quiz" onclick="location.href='/quiz/add_quiz/{{quiz.id}}/'" value="Bearbeiten"/><br>
+
+
+
+                        </li>
+                        {% endfor %}
+                    </ul>
+                    <br><br>
+                </div>
+            </div>
+            <div id="footer">
+
+            </div>
+        </div>
+
+</body>
+</html>

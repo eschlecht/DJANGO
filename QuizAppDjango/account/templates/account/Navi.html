@@ -1,0 +1,19 @@
+
+                <h2> DJANGO UNCHAINED </h2>
+                <ul class="topnav" id="myTopnav">
+                  <li><a href="#home" onclick="location.href='/quiz/';">Hauptmenü</a></li>
+                  <li><a href="#news" onclick="location.href='/quiz/course_select/';">Quiz spielen</a></li>
+                    <li><a href="#multiplayer" onclick="location.href='/quiz/lobbys/';">Multiplayer</a> </li>
+                    {% if user.is_staff %}
+                  <li><a href="#about" onclick="location.href='/quiz/settings/';">Quiz konfigurieren</a></li>
+                    {% endif %}
+                    <li><a href="#about" onclick="location.href='/account/';">Account</a></li>
+                    <li style="float: right">
+                        <a href="" onclick="location.href='/account/';">
+                            <span class="glyphicon glyphicon-user"></span> Profil
+                        </a>
+                    </li>
+                  <li class="icon">
+                    <a href="javascript:void(0);" onclick="myFunction()">&#9776;</a>
+                  </li>
+                </ul>

@@ -1,0 +1,183 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    {% load staticfiles %}
+    <link rel="stylesheet" href="//maxcdn.bootstrapcdn.com/bootstrap/3.2.0/css/bootstrap.min.css">
+    <link rel="stylesheet" href="//maxcdn.bootstrapcdn.com/bootstrap/3.2.0/css/bootstrap-theme.min.css">
+     <link rel="stylesheet"  href="{% static '/quiz/style.css' %}">
+    <meta charset="UTF-8">
+
+<style>
+
+        {% include "quiz/Dropdown.html" %}
+
+        @media screen and (max-width:680px) {
+  ul.topnav li:not(:first-child) {display: none;}
+  ul.topnav li.icon {
+    float: right;
+    display: inline-block;
+  }
+}
+
+@media screen and (max-width:680px) {
+  ul.topnav.responsive {position: relative;}
+  ul.topnav.responsive li.icon {
+    position: absolute;
+    right: 0;
+    top: 0;
+  }
+  ul.topnav.responsive li {
+    float: none;
+    display: inline;
+  }
+  ul.topnav.responsive li a {
+    display: block;
+    text-align: left;
+  }
+}
+    </style>
+
+</head>
+<body>
+<script>
+
+    function myFunction() {
+    var x = document.getElementById("myTopnav");
+    if (x.className === "topnav") {
+        x.className += " responsive";
+    } else {
+        x.className = "topnav";
+    }
+}
+
+if(document.getElementById('auswahl1').clicked == true)
+{
+   document.getElementById('auswahl1').style.backgroundColor='#228B22';
+    document.getElementById('auswahl2').style.backgroundColor='#3b5998';
+    document.getElementById('auswahl3').style.backgroundColor='#3b5998';
+}else if(document.getElementById('auswahl2').clicked == true){
+    document.getElementById('auswahl1').bgcolor='#3b5998';
+    document.getElementById('auswahl2').bgcolor='#228B22';
+    document.getElementById('auswahl3').bgcolor='#3b5998';
+}else if(document.getElementById('auswahl3').clicked == true){
+    document.getElementById('auswahl1').bgcolor='#3b5998';
+    document.getElementById('auswahl2').bgcolor='#3b5998';
+    document.getElementById('auswahl3').bgcolor='#228B22';
+}
+
+</script>
+        <div id="webseite" >
+            <div id="header">
+
+                {% include "quiz/Navi.html" %}
+
+            </div>
+            <div id="main">
+                <div id="inhalt">
+                <div id = "nav">
+                    <br>
+                    <h2 class="form-signin-heading">Wahlen Sie einen Fragetypen für ihr Quiz aus</h2>
+
+                        <form method="post">
+                         {% if b%}
+                            <input id="auswahl" title="BegriffsFrage zu ihrem Quiz hinzufügen" type="submit" value="Begriffs Frage" name="essay">
+                            <input id="auswahl" title="MultipleChoice Frage zu ihrem Quiz hinzufügen" type="submit" value="MultipleChoice Frage" name="multi">
+                            <input id="auswahl" title="WahrFalsch Frage Frage zu ihrem Quiz hinzufügen" type="submit" value="WahrFalsch Frage" name="truefalse" style="background:forestgreen">
+                            {% elif a%}
+                            <input id="auswahl" title="BegriffsFrage zu ihrem Quiz hinzufügen" type="submit" value="Begriffs Frage" name="essay">
+                            <input id="auswahl" title="MultipleChoice Frage zu ihrem Quiz hinzufügen" type="submit" value="MultipleChoice Frage" name="multi" style="background:forestgreen">
+                            <input id="auswahl" title="WahrFalsch Frage Frage zu ihrem Quiz hinzufügen" type="submit" value="WahrFalsch Frage" name="truefalse">
+                            {% else %}
+                            <input id="auswahl" title="BegriffsFrage zu ihrem Quiz hinzufügen" type="submit" value="Begriffs Frage" name="essay" style="background:forestgreen">
+                            <input id="auswahl" title="MultipleChoice Frage zu ihrem Quiz hinzufügen" type="submit" value="MultipleChoice Frage" name="multi">
+                            <input id="auswahl" title="WahrFalsch Frage Frage zu ihrem Quiz hinzufügen" type="submit" value="WahrFalsch Frage" name="truefalse">
+                            {% endif %}
+                        </form>
+                </div>
+                <div class = "unten">
+
+                        <form id="QuestionForm" method="post">
+                            <h3>{{ Question }}</h3>
+                            {% for field in form.visible_fields %}
+                            {{field.errors}}
+                            {{field.help_text}}{{field}}
+
+                            {% endfor %}
+
+                            {% if a %}
+                            <h5>Welche Antwort ist richtig ?</h5>
+
+                        <select name="drop" size="4" required>
+                                <option>1</option>
+                                <option>2</option>
+                                <option>3</option>
+                                <option>4</option>
+
+                            </select>
+                            {% endif %}
+                            {% if b%}
+                            <h5>Ist die Aussage/Frage Wahr oder Falsch?</h5>
+                            <br>
+                            <select name="drop" size="2" required>
+                                <option>True</option>
+                                <option>False</option>
+                            </select>
+                            {% endif %}
+                            <br>
+                            {% if saved %}
+
+
+                            <br>
+                            <div class="alert alert-success">
+                            <strong>Gespeichert!</strong> Die Datenbank wurde aktuallisiert.
+                            </div>
+
+
+
+                            {% endif %}
+
+
+
+                            <input type="submit" title="Frage in die Datenbank speichern"name="submit" value="speichern"/>
+                            <input type="submit" title="zum Hauptmenü zurückkehren" name="done" value="fertig" onclick="location.href='/quiz/';">
+                            <br><br>
+
+                        </div>
+                <div class="unten2">
+
+                        <h2>Fragen in diesem Quiz</h2>
+
+                            <table class="Tab">
+                                <thead>
+                                <tr><th class="Feld">Fragetyp</th><th class="Feld2">Frage</th></tr>
+                                </thead>
+
+                                {% for TFQuestion in tquestion %}
+                            <tbody>
+                            <tr><td class="Feld"> WahrFalsch </td><td class="Feld2">{{ TFQuestion.tf_question_text }}</td></tr>
+
+                        {% endfor %}
+                        {% for EssayQuestion in equestion %}
+                            <tr><td class="Feld"> Begriffs</td> <td class="Feld2">{{ EssayQuestion.essay_question_text}} </td></tr>
+                        {% endfor %}
+                        {% for SingleChoiceQuestion in squestion %}
+                            <tr><td class="Feld"> SingleChoice </td> <td class="Feld2">{{ SingleChoiceQuestion.single_question_text }}</td></tr>
+
+                        {% endfor %}
+                        {% for MultipleChoiceQuestion in mquestion %}
+                            <tr> <td class="Feld"> MultipleChoice </td> <td class="Feld2">{{ MultipleChoiceQuestion.multi_question_text }}</td></tr>
+
+                        {% endfor %}
+                            </tbody>
+                            </table>
+                        </div>
+
+                        </form>
+                </div>
+            </div>
+            <div id="footer">
+
+            </div>
+        </div>
+

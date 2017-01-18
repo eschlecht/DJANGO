@@ -1,0 +1,263 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    {% load staticfiles %}
+    <link rel="stylesheet" href="//maxcdn.bootstrapcdn.com/bootstrap/3.2.0/css/bootstrap.min.css">
+    <link rel="stylesheet" href="//maxcdn.bootstrapcdn.com/bootstrap/3.2.0/css/bootstrap-theme.min.css">
+    <link rel="stylesheet" href="{% static '/quiz/style.css' %}">
+    <link type="text/javascript" href="http://ajax.googleapis.com/ajax/libs/jquery/1.3/jquery.min.js">
+    <meta charset="UTF-8">
+    <title>Warfield</title>
+    <style>
+        @media screen and (max-width: 680px) {
+            ul.topnav li:not(:first-child) {
+                display: none;
+            }
+
+            ul.topnav li.icon {
+                float: right;
+                display: inline-block;
+            }
+        }
+
+        @media screen and (max-width: 680px) {
+            ul.topnav.responsive {
+                position: relative;
+            }
+
+            ul.topnav.responsive li.icon {
+                position: absolute;
+                right: 0;
+                top: 0;
+            }
+
+            ul.topnav.responsive li {
+                float: none;
+                display: inline;
+            }
+
+            ul.topnav.responsive li a {
+                display: block;
+                text-align: left;
+            }
+        }
+
+        {% include "quiz/Dropdown.html" %}
+
+        @media screen and (max-width: 680px) {
+            ul.topnav li:not(:first-child) {
+                display: none;
+            }
+
+            ul.topnav li.icon {
+                float: right;
+                display: inline-block;
+            }
+        }
+
+        @media screen and (max-width: 680px) {
+            ul.topnav.responsive {
+                position: relative;
+            }
+
+            ul.topnav.responsive li.icon {
+                position: absolute;
+                right: 0;
+                top: 0;
+            }
+
+            ul.topnav.responsive li {
+                float: none;
+                display: inline;
+            }
+
+            ul.topnav.responsive li a {
+                display: block;
+                text-align: left;
+            }
+        }
+    </style>
+
+</head>
+<body>
+<div id="webseite">
+    <div id="header">
+        <h2>Multiplayer</h2>
+    </div>
+</div>
+
+
+
+<div id="inhalt">
+
+<h1 id="countdown" class="timer" style="color: #79f7f9">0:10</h1>
+    {% if start %}
+
+        {% if quiz.question_type == "truefalse" %}
+            <script>
+                var seconds = 10;
+                function secondPassed() {
+                    var minutes = Math.round((seconds - 30) / 60);
+                    var remainingSeconds = seconds % 60;
+                    if (remainingSeconds < 10) {
+                        remainingSeconds = "0" + remainingSeconds;
+                    }
+                    document.getElementById('countdown').innerHTML = minutes + ":" + remainingSeconds;
+                    if (seconds == 0) {
+                        clearInterval(countdownTimer);
+                        document.getElementById("truefalse").submit();
+                    } else {
+                        seconds--;
+                    }
+                }
+                var countdownTimer = setInterval('secondPassed()', 1000);
+            </script>
+
+
+            <h1> {{ quiz.tf_question_text }} </h1>
+            <form id="truefalse" method="post" name="tfform"><br>
+
+                <input id="verifyAnswer1" title="die Frage ist Wahr" type=checkbox value="wahr" name="True"/>
+                <label for="verifyAnswer1" name="True">Wahr</label><br>
+                <input id="verifyAnswer2" title="die Frage ist Falsch" type=checkbox value="falsch" name="False"/>
+                <label for="verifyAnswer2" name="False">Falsch</label>
+            </form>
+            <br>
+
+
+        {% endif %}
+
+
+        {% if quiz.question_type == "multiplechoice" %}
+
+
+            <script>
+                var seconds = 10;
+                function secondPassed() {
+                    var minutes = Math.round((seconds - 30) / 60);
+                    var remainingSeconds = seconds % 60;
+                    if (remainingSeconds < 10) {
+                        remainingSeconds = "0" + remainingSeconds;
+                    }
+                    document.getElementById('countdown').innerHTML = minutes + ":" + remainingSeconds;
+                    if (seconds == 0) {
+                        clearInterval(countdownTimer);
+                        document.getElementById("multi").submit();
+                    } else {
+                        seconds--;
+                    }
+                }
+
+                var countdownTimer = setInterval('secondPassed()', 1000);
+            </script>
+
+
+            <h1>{{ quiz.multi_question_text }}</h1>
+            <form id="multi" method="post" name="multiform">
+
+                <input id="answer_1" type=checkbox value=1 name="checks1">
+                <label for="answer_1"> {{ quiz.answer_text1 }}</label><br>
+
+                <input id="answer_2" type=checkbox value=1 name="checks2">
+
+                <label for="answer_2"> {{ quiz.answer_text2 }}</label><br>
+
+                <input id="answer_3" type=checkbox value=1 name="checks3">
+                <label for="answer_3"> {{ quiz.answer_text3 }}</label><br>
+
+                <input id="answer_4" type=checkbox value=1 name="checks4">
+                <label for="answer_4"> {{ quiz.answer_text4 }}</label>
+            </form>
+            <br>
+
+
+        {% endif %}
+
+
+        {% if quiz.question_type == "essay" %}
+
+
+            <script>
+                var seconds = 10;
+                function secondPassed() {
+                    var minutes = Math.round((seconds - 30) / 60);
+                    var remainingSeconds = seconds % 60;
+                    if (remainingSeconds < 10) {
+                        remainingSeconds = "0" + remainingSeconds;
+                    }
+                    document.getElementById('countdown').innerHTML = minutes + ":" + remainingSeconds;
+                    if (seconds == 0) {
+                        clearInterval(countdownTimer);
+                        document.getElementById("essay").submit();
+                    } else {
+                        seconds--;
+                    }
+                }
+                var countdownTimer = setInterval('secondPassed()', 1000);
+            </script>
+
+
+            <h1> {{ quiz.essay_question_text }} </h1>
+            <form method="post" id="essay" name="essayform"><br>
+                <input type=text title="Bitte geben sie eine Antwort ein!" placeholder="Enter Your answer here!"
+                       name="answer"
+                       required autofocus autocomplete="False">
+                <br><br>
+            </form>
+
+
+        {% endif %}
+
+
+    {% endif %}
+    <form method="post" id="refresh">
+        {% if not start %}
+
+
+            <input type="submit" value="Starten" name="starten">
+            <script>
+                var seconds = 1;
+                function secondPassed() {
+                    var minutes = Math.round((seconds - 30) / 60);
+                    var remainingSeconds = seconds % 60;
+                    if (remainingSeconds < 10) {
+                        remainingSeconds = "0" + remainingSeconds;
+                    }
+                    if (seconds == 0) {
+                        clearInterval(countdownTimer);
+                        document.getElementById("refresh").submit();
+                    } else {
+                        seconds--;
+                    }
+                }
+                var countdownTimer = setInterval('secondPassed()', 1000);
+            </script>
+<input type="submit" value="Austreten" name="austreten">
+        {% endif %}
+
+
+        <div id="user" align="center">
+            <table style="width: 50%">
+                <th>Name</th>
+                <th>Points</th>
+                {% for user in all_user %}
+                    <tr>
+                        <td>{{ user.username }}</td>
+                        <td>{{ user.points }}</td>
+                    </tr>
+                    <br>
+                {% endfor %}
+            </table>
+        </div>
+    </form>
+
+</div>
+
+<div>
+
+</div>
+<div id="footer">
+
+</div>
+</body>
+</html>
