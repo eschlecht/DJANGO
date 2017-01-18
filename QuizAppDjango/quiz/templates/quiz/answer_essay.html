@@ -6,10 +6,7 @@
     <link rel="stylesheet" href="//maxcdn.bootstrapcdn.com/bootstrap/3.2.0/css/bootstrap-theme.min.css">
      <link rel="stylesheet"  href="{% static '/quiz/style.css' %}">
     <meta charset="UTF-8">
-<<<<<<< HEAD
 
-=======
->>>>>>> a8e443b5939d10c9b2902762f7ce5d3de0d17113
 <style>
 
         {% include "quiz/Dropdown.html" %}
@@ -98,15 +95,19 @@ else if (antwort_ist = 'Falsch') {
                         <strong>Super!</strong> Die Antwort war richtig.<br> Du bekommst {{punktzahl}} Punkt(e)
                             </div>
     <input id="Weiter1" title="nächste Frag beantworten" type=submit value="Weiter" name="Weiter">
+    <br>
+    <a target="_blank" href="https://www.google.de/#q={{question.essay_question_text}}"><input type="button" value="Mehr zur Frage recherchieren"></a>
 
     {% elif f %}
     <div class="alert alert-danger">
                         <strong>Schade!</strong> Die Antwort war leider Falsch.
                             </div>
     <input id="Weiter2" title="nächste Frag beantworten" type=submit value="Weiter" name="Weiter">
-
+    <br>
+    <a target="_blank" href="https://www.google.de/#q={{question.essay_question_text}}"><input type="button" value="Mehr zur Frage recherchieren"></a>
+    <br>
     {% else %}
-    <input type=text title="Bitte geben sie eine Antwort ein!" placeholder="Enter Your answer here!" name="answer" required autofocus autocomplete="False">
+    <input type=text title="Bitte geben sie eine Antwort ein!" placeholder="Enter Your answer here!" name="answer" required autofocus autocomplete="off">
 
     <br><br>
    <input id="verifyAnswer" type=submit value="Fertig" name="Fertig"><br><br>

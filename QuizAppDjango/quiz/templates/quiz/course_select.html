@@ -66,12 +66,17 @@
                                 <input id="search_submit" title="Kurs Suchen" type="submit" value="Suchen" name="Suchen" >
                                 <button  id="zuruck" title="Die Suche zurücksetzen" value="Suche zurücksetzen" href="/quiz_select/">Zurücksetzen</button>
                             </form>
+                            <hr>
 
                             {% for course in all_course %}
-                            <li>
+
                                 <input  type="button" title="Diesen Kurs zum befüllen wählen" onclick="location.href='/quiz/{{ course.id }}/quiz_select/';" value="{{ course.course_title }}" />
-                            </li>
+                                <br>
                             {% endfor %}
+                            {% if empty is True %}
+                                <h4>Suche ohne Ergebnis :(</h4>
+                                Tipp: Anfang des Kursnamens eingeben.
+                            {% endif %}
 
                     <br><br>
 

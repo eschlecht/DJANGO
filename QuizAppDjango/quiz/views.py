@@ -10,14 +10,29 @@ from .forms import CourseForm, QuizForm, EssayQuestionForm, SingleChoiceQuestion
     TFQuestionForm, LobbyForm, EntryLobbyForm
 from .models import Course, Quiz, EssayQuestion, SingleChoiceQuestion, MultipleChoiceQuestion, TFQuestion, Ergebnis, \
     Lobby, UserInLobby, ProposeEssayQuestion, ProposeSingleChoiceQuestion, ProposeMultipleChoiceQuestion, \
-    ProposeTFQuestion, MultiplayerErgebnis
+    ProposeTFQuestion, MultiplayerErgebnis, ProposeTFQuestion
 from django.http import HttpResponseRedirect
+
+from django.http import HttpResponseRedirect, HttpResponseNotFound, Http404
 from datetime import datetime
-from .models import Course, Quiz, EssayQuestion, SingleChoiceQuestion, MultipleChoiceQuestion, TFQuestion
+from time import sleep
+import time
+
+from .models import Course, Quiz, EssayQuestion, SingleChoiceQuestion, MultipleChoiceQuestion, TFQuestion \
+    , ProposeSingleChoiceQuestion, ProposeEssayQuestion, ProposeMultipleChoiceQuestion, ProposeTFQuestion, Lobby, \
+    UserInLobby
 from account.models import UserRank, ProfilePicture
 from django.http import HttpResponseRedirect
 
-import sqlite3
+from django.views import generic
+from django.views.generic.edit import UpdateView
+from django.core.urlresolvers import reverse_lazy
+from django.http import HttpResponse
+import os, sys, sqlite3
+import json
+from itertools import cycle
+from django.template.loader import render_to_string
+from django.template import loader, Context
 import random
 import ctypes
 
@@ -40,6 +55,8 @@ quiz_delete = 0
 deleted_quiz = u""
 course_delete = 0
 deleted_course = u""
+propose_question_delete = 0
+propose_question_save = 0
 
 
 # -*- coding: utf-8 -*-
@@ -49,17 +66,34 @@ def index(request):
 
 
 def settings(request):
+    # Uebergabe von Profilbild
+    username = request.user.username
+    if username != '':
+        user_rank = get_object_or_404(UserRank, user_fk_id=request.user.id)
+        pro_pic = get_object_or_404(ProfilePicture, id=user_rank.picture_id)
+    else:
+        pro_pic = get_object_or_404(ProfilePicture, id=1)
+    user = request.user
     print('Staff? :', request.user.is_staff)
     print('Username =', request.user.username)
-    if request.user.is_staff == True:
-        return render_to_response('quiz/settings.html')
-    else:
+    if request.user.is_staff is False:
         print('Keine Berechtigung!')
-        return HttpResponseRedirect('/quiz/')
-    return render_to_response('quiz/index.html')
+        return HttpResponseNotFound('<h1>Keine Berechtigung!</h1>')
+    return render_to_response('quiz/settings.html', {'user': user, 'pro_pic': pro_pic})
 
 
 def add_course(request):
+    # Uebergabe von Profilbild
+    username = request.user.username
+    if username != '':
+        user_rank = get_object_or_404(UserRank, user_fk_id=request.user.id)
+        pro_pic = get_object_or_404(ProfilePicture, id=user_rank.picture_id)
+    else:
+        pro_pic = get_object_or_404(ProfilePicture, id=1)
+    user = request.user
+    if request.user.is_staff is False:
+        print('Keine Berechtigung!')
+        return HttpResponseNotFound('<h1>Keine Berechtigung!</h1>')
     context = RequestContext(request)
     if request.method == 'POST':
 
@@ -72,17 +106,31 @@ def add_course(request):
                            semester=semester,
                            dozent=request.user.id)
             c_obj.save()
-        form = CourseForm(None)
-        return render_to_response('quiz/add_course.html', {'form': form, 'saved': True, 'course': course_title},
+        form = CourseForm()
+        return render_to_response('quiz/add_course.html',
+                                  {'user': user, 'form': form, 'saved': True, 'course': course_title,
+                                   'pro_pic': pro_pic},
                                   context)
 
     else:
         form = CourseForm()
-    return render_to_response('quiz/add_course.html', {'form': form}, context)
+    return render_to_response('quiz/add_course.html', {'user': user, 'form': form, 'pro_pic': pro_pic}, context)
 
 
 def add_course_rename(request, course_id):
+    # Uebergabe von Profilbild
+    username = request.user.username
+    if username != '':
+        user_rank = get_object_or_404(UserRank, user_fk_id=request.user.id)
+        pro_pic = get_object_or_404(ProfilePicture, id=user_rank.picture_id)
+    else:
+        pro_pic = get_object_or_404(ProfilePicture, id=1)
+    user = request.user
+    if request.user.is_staff is False:
+        print('Keine Berechtigung!')
+        return HttpResponseNotFound('<h1>Keine Berechtigung!</h1>')
     context = RequestContext(request)
+    rename = 1
     if request.method == 'POST':
 
         form = CourseForm(request.POST)
@@ -90,19 +138,35 @@ def add_course_rename(request, course_id):
             c_obj = get_object_or_404(Course, pk=course_id)
             c_obj.course_title = request.POST.get('course_title')
             c_obj.semester = request.POST.get('semester')
-            c_obj.dozent = request.POST.get('dozent')
+
             c_obj.id = course_id
             c_obj.save()
         form = CourseForm(None)
-        return render_to_response('quiz/add_course.html', {'form': form, 'update': True, 'course': c_obj.course_title},
+        return render_to_response('quiz/add_course.html',
+                                  {'user': user, 'form': form, 'pro_pic': pro_pic, 'update': True,
+                                   'course': c_obj.course_title},
                                   context)
 
     else:
-        form = CourseForm()
-    return render_to_response('quiz/add_course.html', {'form': form}, context)
+        c_obj = get_object_or_404(Course, id=course_id)
+        form = CourseForm(instance=c_obj)
+    return render_to_response('quiz/add_course.html',
+                              {'user': user, 'form': form, 'pro_pic': pro_pic, 'rename': rename}, context)
 
 
 def add_quiz(request, course_id):
+    # Uebergabe von Profilbild
+    username = request.user.username
+    if username != '':
+        user_rank = get_object_or_404(UserRank, user_fk_id=request.user.id)
+        pro_pic = get_object_or_404(ProfilePicture, id=user_rank.picture_id)
+    else:
+        pro_pic = get_object_or_404(ProfilePicture, id=1)
+    user = request.user
+    if request.user.is_staff is False:
+        print('Keine Berechtigung!')
+        return HttpResponseNotFound('<h1>Keine Berechtigung!</h1>')
+
     context = RequestContext(request)
     if request.method == 'POST':
 
@@ -112,18 +176,45 @@ def add_quiz(request, course_id):
             q_obj = Quiz(quiz_title=quiz_title,
                          coursefk_id=course_id)
             q_obj.save()
-        form = QuizForm(None)
-        allquiz = Quiz.objects.filter(coursefk_id=course_id)
-        return render_to_response('quiz/add_quiz.html',
-                                  {'form': form, 'saved': True, 'quiz': quiz_title, 'allquiz': allquiz}, context)
+            form = QuizForm(None)
+            allquiz = []
+            for aq in Quiz.objects.filter(coursefk_id=course_id):
+                allquiz.append(aq.quiz_title.encode('utf-8'))
+            print(allquiz)
+            if request.POST.get('submit'):
+                print('s1')
+                return render_to_response('quiz/add_quiz.html',
+                                          {'form': form, 'saved': True, 'quiz': quiz_title, 'user': user,
+                                           'allquiz': allquiz, 'pro_pic': pro_pic}, context)
+            if request.POST.get('submit2'):
+                print('s2')
+                print(q_obj.id)
+                return HttpResponseRedirect('/quiz/%s/add_question/' % q_obj.id)
     else:
         form = QuizForm()
-        allquiz = Quiz.objects.filter(coursefk_id=course_id)
-    return render_to_response('quiz/add_quiz.html', {'form': form, 'allquiz': allquiz}, context)
+        allquiz = []
+        for aq in Quiz.objects.filter(coursefk_id=course_id):
+            allquiz.append(aq.quiz_title.encode('utf-8'))
+
+    return render_to_response('quiz/add_quiz.html',
+                              {'form': form, 'allquiz': allquiz, 'user': user, 'pro_pic': pro_pic}, context)
 
 
-def add_quiz_rename(request, quiz_id):
+def add_quiz_rename(request, course_id, quiz_id):
+    # Uebergabe von Profilbild
+    username = request.user.username
+    if username != '':
+        user_rank = get_object_or_404(UserRank, user_fk_id=request.user.id)
+        pro_pic = get_object_or_404(ProfilePicture, id=user_rank.picture_id)
+    else:
+        pro_pic = get_object_or_404(ProfilePicture, id=1)
+    user = request.user
+    if request.user.is_staff is False:
+        print('Keine Berechtigung!')
+        return HttpResponseNotFound('<h1>Keine Berechtigung!</h1>')
     context = RequestContext(request)
+    rename = 1
+    quiz_obj = get_object_or_404(Quiz, id=quiz_id)
     if request.method == 'POST':
 
         form = QuizForm(request.POST)
@@ -131,36 +222,36 @@ def add_quiz_rename(request, quiz_id):
         if form.is_valid():
             q_obj = get_object_or_404(Quiz, pk=quiz_id)
             q_obj.quiz_title = request.POST.get('quiz_title')
-            q_obj.coursefk_id = request.POST.get('coursefk')
+            q_obj.coursefk_id = course_id
             q_obj.id = quiz_id
-
             q_obj.save()
         form = QuizForm(None)
 
-        return render_to_response('quiz/add_quiz.html', {'form': form, 'update': True, 'quiz': quiz}, context)
+        return render_to_response('quiz/add_quiz.html',
+                                  {'user': user, 'form': form, 'pro_pic': pro_pic, 'update': True, 'quiz': quiz},
+                                  context)
     else:
-        form = QuizForm()
-    return render_to_response('quiz/add_quiz.html', {'form': form}, context)
-
-
-def add_quiz_rename(request, quiz_id):
-    context = RequestContext(request)
-    if request.method == 'POST':
-
-        form = QuizForm(request.POST)
-        if form.is_valid():
-            q_obj = get_object_or_404(Quiz, pk=quiz_id)
-            q_obj.quiz_title = request.POST.get('quiz_title')
-            q_obj.coursefk_id = request.POST.get('coursefk')
-            q_obj.id = quiz_id
-            q_obj.save()
-        return HttpResponseRedirect('/quiz/update_quiz/')
-    else:
-        form = QuizForm()
-    return render_to_response('quiz/add_quiz.html', {'form': form}, context)
+        form = QuizForm(instance=quiz_obj)
+        allquiz = Quiz.objects.filter(coursefk_id=course_id)
+    return render_to_response('quiz/add_quiz.html',
+                              {'user': user, 'form': form, 'pro_pic': pro_pic, 'quiz': quiz_obj, 'rename': rename,
+                               'allquiz': allquiz}, context)
 
 
 def add_question(request, quiz_id):
+    # Uebergabe von Profilbild
+    username = request.user.username
+    if username != '':
+        user_rank = get_object_or_404(UserRank, user_fk_id=request.user.id)
+        pro_pic = get_object_or_404(ProfilePicture, id=user_rank.picture_id)
+    else:
+        pro_pic = get_object_or_404(ProfilePicture, id=1)
+    user = request.user
+
+    if request.user.is_staff is False:
+        print('Keine Berechtigung!')
+        return HttpResponseNotFound('<h1>Keine Berechtigung!</h1>')
+
     tquestion = TFQuestion.objects.filter(quizfk=quiz_id)
     equestion = EssayQuestion.objects.filter(quizfk=quiz_id)
     squestion = SingleChoiceQuestion.objects.filter(quizfk=quiz_id)
@@ -173,8 +264,8 @@ def add_question(request, quiz_id):
                                   {'form': form, 'quiz_id': quiz_id, 'Question': "Begriffs Frage",
                                    'tquestion': tquestion,
                                    'equestion': equestion,
-                                   'sequestion': squestion,
-                                   'mquestion': mquestion}, context)
+                                   'sequestion': squestion, 'user': user,
+                                   'mquestion': mquestion, 'pro_pic': pro_pic}, context)
 
     if request.POST.get('single') == 'single':
         form = SingleChoiceQuestionForm()
@@ -182,8 +273,8 @@ def add_question(request, quiz_id):
                                   {'form': form, 'quiz_id': quiz_id, 'Question': "Single Choice Question",
                                    'tquestion': tquestion,
                                    'equestion': equestion,
-                                   'sequestion': squestion,
-                                   'mquestion': mquestion}, context)
+                                   'sequestion': squestion, 'user': user,
+                                   'mquestion': mquestion, 'pro_pic': pro_pic}, context)
 
     if request.POST.get('multi') == 'MultipleChoice Frage':
         form = MultipleChoiceQuestionForm()
@@ -191,8 +282,8 @@ def add_question(request, quiz_id):
                                   {'form': form, 'quiz_id': quiz_id, 'Question': "Multiple Choice Frage", 'a': True,
                                    'tquestion': tquestion,
                                    'equestion': equestion,
-                                   'sequestion': squestion,
-                                   'mquestion': mquestion}, context)
+                                   'sequestion': squestion, 'user': user,
+                                   'mquestion': mquestion, 'pro_pic': pro_pic}, context)
 
     if request.POST.get('truefalse') == 'WahrFalsch Frage':
         form = TFQuestionForm()
@@ -200,8 +291,8 @@ def add_question(request, quiz_id):
                                   {'form': form, 'quiz_id': quiz_id, 'Question': "Wahr/Falsch Frage", 'b': True,
                                    'tquestion': tquestion,
                                    'equestion': equestion,
-                                   'sequestion': squestion,
-                                   'mquestion': mquestion}, context)
+                                   'sequestion': squestion, 'user': user,
+                                   'mquestion': mquestion, 'pro_pic': pro_pic}, context)
 
     if request.POST.get('essay_question_text'):
         form = EssayQuestionForm(request.POST)
@@ -215,8 +306,9 @@ def add_question(request, quiz_id):
                                   {'form': form, 'quiz_id': quiz_id, 'Question': "Begriffs Frage",
                                    'tquestion': tquestion,
                                    'equestion': equestion,
-                                   'sequestion': squestion,
-                                   'mquestion': mquestion, 'saved': True, 'saved_question': q_obj}, context)
+                                   'sequestion': squestion, 'user': user,
+                                   'mquestion': mquestion, 'saved': True, 'saved_question': q_obj, 'pro_pic': pro_pic},
+                                  context)
 
     if request.POST.get('single_question_text'):
         form = SingleChoiceQuestionForm(request.POST)
@@ -231,8 +323,9 @@ def add_question(request, quiz_id):
         return render_to_response('quiz/addquestionselect.html',
                                   {'form': form, 'quiz_id': quiz_id, 'tquestion': tquestion,
                                    'equestion': equestion,
-                                   'sequestion': squestion,
-                                   'mquestion': mquestion, 'saved': True, 'saved_question': scq_obj}, context)
+                                   'sequestion': squestion, 'user': user,
+                                   'mquestion': mquestion, 'saved': True, 'saved_question': scq_obj,
+                                   'pro_pic': pro_pic}, context)
 
     if request.POST.get('tf_question_text'):
         form = TFQuestionForm(request.POST)
@@ -252,8 +345,8 @@ def add_question(request, quiz_id):
                                   {'form': form, 'quiz_id': quiz_id, 'Question': "True or False Question", 'b': True,
                                    'tquestion': tquestion,
                                    'equestion': equestion,
-                                   'sequestion': squestion,
-                                   'mquestion': mquestion, 'saved': True, 'saved_question': mq_obj},
+                                   'sequestion': squestion, 'user': user,
+                                   'mquestion': mquestion, 'saved': True, 'saved_question': mq_obj, 'pro_pic': pro_pic},
 
                                   context)
 
@@ -261,44 +354,36 @@ def add_question(request, quiz_id):
         form = MultipleChoiceQuestionForm(request.POST)
         if form.is_valid():
             if str(request.POST.get('drop')) == "1":
-                correct_answer_1 = True
+                correct_answer = '1'
 
                 print(str(request.POST.get('drop')))
 
-
-            else:
-                correct_answer_1 = False
             if str(request.POST.get('drop')) == "2":
-                correct_answer_2 = True
-            else:
-                correct_answer_2 = False
-            if str(request.POST.get('drop')) == "3":
-                correct_answer_3 = True
-            else:
-                correct_answer_3 = False
-            if str(request.POST.get('drop')) == "4":
-                correct_answer_4 = True
-            else:
-                correct_answer_4 = False
+                correct_answer = '2'
 
-            mq_obj = MultipleChoiceQuestion(multi_question_text=request.POST.get('multi_question_text'),
-                                            answer_text1=request.POST.get('answer_text1'),
-                                            answer_text2=request.POST.get('answer_text2'),
-                                            answer_text3=request.POST.get('answer_text3'),
-                                            answer_text4=request.POST.get('answer_text4'),
-                                            correct_answer_1=correct_answer_1,
-                                            correct_answer_2=correct_answer_2,
-                                            correct_answer_3=correct_answer_3,
-                                            correct_answer_4=correct_answer_4,
-                                            quizfk_id=quiz_id)
+            if str(request.POST.get('drop')) == "3":
+                correct_answer = '3'
+
+            if str(request.POST.get('drop')) == "4":
+                correct_answer = '4'
+
+            mq_obj = SingleChoiceQuestion(single_question_text=request.POST.get('multi_question_text'),
+                                          answer_text1=request.POST.get('answer_text1'),
+                                          answer_text2=request.POST.get('answer_text2'),
+                                          answer_text3=request.POST.get('answer_text3'),
+                                          answer_text4=request.POST.get('answer_text4'),
+                                          correct_answer=correct_answer,
+
+                                          quizfk_id=quiz_id)
             mq_obj.save()
             form = MultipleChoiceQuestionForm()
             return render_to_response('quiz/addquestionselect.html',
                                       {'form': form, 'quiz_id': quiz_id, 'Question': "Multiple Choice Question",
                                        'a': True, 'tquestion': tquestion,
                                        'equestion': equestion,
-                                       'sequestion': squestion,
-                                       'mquestion': mquestion, 'saved': True, 'saved_question': mq_obj},
+                                       'squestion': squestion, 'user': user,
+                                       'mquestion': mquestion, 'saved': True, 'saved_question': mq_obj,
+                                       'pro_pic': pro_pic},
 
                                       context)
 
@@ -307,30 +392,49 @@ def add_question(request, quiz_id):
     return render_to_response('quiz/addquestionselect.html',
                               {'form': form, 'quiz_id': quiz_id, 'Question': "Begriffs Frage", 'tquestion': tquestion,
                                'equestion': equestion,
-                               'sequestion': squestion,
-                               'mquestion': mquestion}, context)
+                               'sequestion': squestion, 'user': user,
+                               'mquestion': mquestion, 'pro_pic': pro_pic}, context)
 
     if request.POST.get('fertig'):
         return render(request, 'quiz/add_quiz.html', {'tquestion': tquestion,
                                                       'equestion': equestion,
                                                       'sequestion': squestion,
-                                                      'mquestion': mquestion}, context)
+                                                      'mquestion': mquestion, 'pro_pic': pro_pic}, context)
 
 
 def fill_quiz(request):
+    # Uebergabe von Profilbild
+    username = request.user.username
+    if username != '':
+        user_rank = get_object_or_404(UserRank, user_fk_id=request.user.id)
+        pro_pic = get_object_or_404(ProfilePicture, id=user_rank.picture_id)
+    else:
+        pro_pic = get_object_or_404(ProfilePicture, id=1)
+
+    if request.user.is_staff is False:
+        print('Keine Berechtigung!')
+        return HttpResponseNotFound('<h1>Keine Berechtigung!</h1>')
     all_quiz = Quiz.objects.all()
     context = {
         'all_quiz': all_quiz
     }
-    return render(request, 'quiz/fill_quiz.html', context)
+    return render(request, 'quiz/fill_quiz.html', {'pro_pic': pro_pic}, context)
 
 
 def fill_course(request):
+    # Uebergabe von Profilbild
+    username = request.user.username
+    if username != '':
+        user_rank = get_object_or_404(UserRank, user_fk_id=request.user.id)
+        pro_pic = get_object_or_404(ProfilePicture, id=user_rank.picture_id)
+    else:
+        pro_pic = get_object_or_404(ProfilePicture, id=1)
+
+    if request.user.is_staff is False:
+        print('Keine Berechtigung!')
+        return HttpResponseNotFound('<h1>Keine Berechtigung!</h1>')
     all_course = Course.objects.all()
-    context = {
-        'all_course': all_course
-    }
-    return render(request, 'quiz/fill_course.html', context)
+    return render(request, 'quiz/fill_course.html', {'pro_pic': pro_pic, 'all_course': all_course})
 
 
 def choose(request, quiz_id):
@@ -341,39 +445,68 @@ def choose(request, quiz_id):
 
 
 def course_select(request):
+    # Uebergabe von Profilbild
+    username = request.user.username
+    if username != '':
+        user_rank = get_object_or_404(UserRank, user_fk_id=request.user.id)
+        pro_pic = get_object_or_404(ProfilePicture, id=user_rank.picture_id)
+    else:
+        pro_pic = get_object_or_404(ProfilePicture, id=1)
+
     context = RequestContext(request)
     if request.GET.get('Suchen') == 'Suchen':
         search_query = request.GET.get('search_box')
         all_course = Course.objects.filter(course_title__startswith=search_query)
         if all_course.count() != 0:
-            return render(request, 'quiz/course_select.html', {'all_course': all_course}, context)
+            return render(request, 'quiz/course_select.html', {'all_course': all_course, 'pro_pic': pro_pic}, context)
         else:
             print('Suche ohne Treffer :(')
+            return render(request, 'quiz/course_select.html',
+                          {'all_course': all_course, 'pro_pic': pro_pic, 'empty': True}, context)
     else:
         all_course = Course.objects.all()
         print(all_course)
-    return render(request, 'quiz/course_select.html', {'all_course': all_course}, context)
+    return render(request, 'quiz/course_select.html', {'all_course': all_course, 'pro_pic': pro_pic}, context)
 
 
 def quiz_select(request, course_id):
+    # Uebergabe von Profilbild
+    username = request.user.username
+    if username != '':
+        user_rank = get_object_or_404(UserRank, user_fk_id=request.user.id)
+        pro_pic = get_object_or_404(ProfilePicture, id=user_rank.picture_id)
+    else:
+        pro_pic = get_object_or_404(ProfilePicture, id=1)
+
     context = RequestContext(request)
     if request.GET.get('Suchen') == 'Suchen':
         search_query = request.GET.get('search_box')
         all_quiz = Quiz.objects.filter(coursefk_id=course_id, quiz_title__startswith=search_query)
         if all_quiz.count() != 0:
-            return render(request, 'quiz/quiz_select.html', {'all_quiz': all_quiz}, context)
+            return render(request, 'quiz/quiz_select.html', {'all_quiz': all_quiz, 'pro_pic': pro_pic}, context)
         else:
             print('Suche ohne Treffer :(')
+            return render(request, 'quiz/quiz_select.html', {'all_quiz': all_quiz, 'pro_pic': pro_pic, 'empty': True},
+                          context)
     else:
 
         all_quiz = Quiz.objects.filter(coursefk_id=course_id)
         print(all_quiz)
-    return render(request, 'quiz/quiz_select.html', {'all_quiz': all_quiz}, context)
+    return render(request, 'quiz/quiz_select.html', {'all_quiz': all_quiz, 'pro_pic': pro_pic}, context)
 
 
 def delete_quiz(request, quiz_id):
-    # return HttpResponseRedirect('/quiz/update_quiz/')
+    # Uebergabe von Profilbild
+    username = request.user.username
+    if username != '':
+        user_rank = get_object_or_404(UserRank, user_fk_id=request.user.id)
+        pro_pic = get_object_or_404(ProfilePicture, id=user_rank.picture_id)
+    else:
+        pro_pic = get_object_or_404(ProfilePicture, id=1)
 
+    if request.user.is_staff is False:
+        print('Keine Berechtigung!')
+        return HttpResponseNotFound('<h1>Keine Berechtigung!</h1>')
 
     all_quiz = Quiz.objects.all()
 
@@ -388,12 +521,23 @@ def delete_quiz(request, quiz_id):
 
     # return render_to_response('quiz/update_quiz.html', {'all_quiz':all_quiz, 'quiz':quiz, 'delete':True})
 
-    return HttpResponseRedirect('/quiz/update_quiz/', {'delete': True})
+    return HttpResponseRedirect('/quiz/update_quiz/', {'delete': True, 'pro_pic': pro_pic})
 
-    return render(request, 'quiz/update_quiz.html', {'all_quiz': all_quiz}, context)
+    return render(request, 'quiz/update_quiz.html', {'all_quiz': all_quiz, 'pro_pic': pro_pic}, context)
 
 
 def delete_course(request, course_id):
+    # Uebergabe von Profilbild
+    username = request.user.username
+    if username != '':
+        user_rank = get_object_or_404(UserRank, user_fk_id=request.user.id)
+        pro_pic = get_object_or_404(ProfilePicture, id=user_rank.picture_id)
+    else:
+        pro_pic = get_object_or_404(ProfilePicture, id=1)
+
+    if request.user.is_staff is False:
+        print('Keine Berechtigung!')
+        return HttpResponseNotFound('<h1>Keine Berechtigung!</h1>')
     all_course = Course.objects.all()
     course = get_object_or_404(Course, id=course_id)
     global deleted_course
@@ -404,50 +548,140 @@ def delete_course(request, course_id):
     global course_delete
     course_delete = 1
 
-    return HttpResponseRedirect('/quiz/update_course/')
+    return HttpResponseRedirect('/quiz/update_course/', {'pro_pic': pro_pic})
 
 
-def delete_tfquestion(request, TFQuestion_id):
+def delete_question(request, quiz_id):
+    # Uebergabe von Profilbild
+    username = request.user.username
+    if username != '':
+        user_rank = get_object_or_404(UserRank, user_fk_id=request.user.id)
+        pro_pic = get_object_or_404(ProfilePicture, id=user_rank.picture_id)
+    else:
+        pro_pic = get_object_or_404(ProfilePicture, id=1)
+
+    if request.user.is_staff is False:
+        print('Keine Berechtigung!')
+        return HttpResponseNotFound('<h1>Keine Berechtigung!</h1>')
+    context = RequestContext(request)
+    global question_delete
+    global deleted_question
+    quiz = get_object_or_404(Quiz, id=quiz_id)
+    if question_delete == 0:
+        if request.GET.get('Suchen') == 'Suchen':
+            search_query = request.GET.get('search_box')
+            tquestion = TFQuestion.objects.filter(quizfk_id=quiz_id, tf_question_text__startswith=search_query)
+            equestion = EssayQuestion.objects.filter(quizfk_id=quiz_id, essay_question_text__startswith=search_query)
+            squestion = SingleChoiceQuestion.objects.filter(quizfk_id=quiz_id,
+                                                            single_question_text__startswith=search_query)
+            mquestion = MultipleChoiceQuestion.objects.filter(quizfk_id=quiz_id,
+                                                              multi_question_text__startswith=search_query)
+            return render(request, 'quiz/delete_question.html', {'tquestion': tquestion,
+                                                                 'equestion': equestion,
+                                                                 'sequestion': squestion, 'quiz': quiz,
+                                                                 'mquestion': mquestion, 'pro_pic': pro_pic}, context)
+        else:
+            tquestion = TFQuestion.objects.filter(quizfk_id=quiz_id)
+            equestion = EssayQuestion.objects.filter(quizfk_id=quiz_id)
+            squestion = SingleChoiceQuestion.objects.filter(quizfk_id=quiz_id)
+            mquestion = MultipleChoiceQuestion.objects.filter(quizfk_id=quiz_id)
+        return render(request, 'quiz/delete_question.html', {'tquestion': tquestion,
+                                                             'equestion': equestion,
+                                                             'sequestion': squestion, 'quiz': quiz,
+                                                             'mquestion': mquestion, 'pro_pic': pro_pic}, context)
+    else:
+        question_delete = 0
+        if request.GET.get('Suchen') == 'Suchen':
+            search_query = request.GET.get('search_box')
+            tquestion = TFQuestion.objects.filter(quizfk_id=quiz_id, tf_question_text__startswith=search_query)
+            equestion = EssayQuestion.objects.filter(quizfk_id=quiz_id, essay_question_text__startswith=search_query)
+            squestion = SingleChoiceQuestion.objects.filter(quizfk_id=quiz_id,
+                                                            single_question_text__startswith=search_query)
+            mquestion = MultipleChoiceQuestion.objects.filter(quizfk_id=quiz_id,
+                                                              multi_question_text__startswith=search_query)
+            return render(request, 'quiz/delete_question.html', {'tquestion': tquestion,
+                                                                 'equestion': equestion,
+                                                                 'sequestion': squestion, 'quiz': quiz,
+                                                                 'mquestion': mquestion, 'delete': True,
+                                                                 'deleted_question': deleted_question,
+                                                                 'pro_pic': pro_pic}, context)
+        else:
+            tquestion = TFQuestion.objects.filter(quizfk_id=quiz_id)
+            equestion = EssayQuestion.objects.filter(quizfk_id=quiz_id)
+            squestion = SingleChoiceQuestion.objects.filter(quizfk_id=quiz_id)
+            mquestion = MultipleChoiceQuestion.objects.filter(quizfk_id=quiz_id)
+        return render(request, 'quiz/delete_question.html', {'tquestion': tquestion,
+                                                             'equestion': equestion,
+                                                             'sequestion': squestion, 'quiz': quiz,
+                                                             'mquestion': mquestion, 'delete': True,
+                                                             'deleted_question': deleted_question, 'pro_pic': pro_pic},
+                      context)
+
+
+def delete_tfquestion(request, quiz_id, TFQuestion_id):
+    if request.user.is_staff is False:
+        print('Keine Berechtigung!')
+        return HttpResponseNotFound('<h1>Keine Berechtigung!</h1>')
     tquestion = get_object_or_404(TFQuestion, id=TFQuestion_id)
     global deleted_question
     deleted_question = unicode(tquestion)
     tquestion.delete()
     global question_delete
     question_delete = 1
-    return HttpResponseRedirect('/quiz/update_question/')
+    return HttpResponseRedirect('/quiz/%s/delete_question/' % quiz_id)
 
 
-def delete_essayquestion(request, EssayQuestion_id):
+def delete_essayquestion(request, quiz_id, EssayQuestion_id):
+    if request.user.is_staff is False:
+        print('Keine Berechtigung!')
+        return HttpResponseNotFound('<h1>Keine Berechtigung!</h1>')
     equestion = get_object_or_404(EssayQuestion, id=EssayQuestion_id)
     global deleted_question
     deleted_question = unicode(equestion)
     equestion.delete()
     global question_delete
     question_delete = 1
-    return HttpResponseRedirect('/quiz/update_question/')
+    return HttpResponseRedirect('/quiz/%s/delete_question/' % quiz_id)
 
 
-def delete_singlechoicequestion(request, SingleChoiceQuestion_id):
+def delete_singlechoicequestion(request, quiz_id, SingleChoiceQuestion_id):
+    if request.user.is_staff is False:
+        print('Keine Berechtigung!')
+        return HttpResponseNotFound('<h1>Keine Berechtigung!</h1>')
     squestion = get_object_or_404(SingleChoiceQuestion, id=SingleChoiceQuestion_id)
     global deleted_question
     deleted_question = unicode(squestion)
     squestion.delete()
     global question_delete
     question_delete = 1
-    return HttpResponseRedirect('/quiz/update_question/')
+    return HttpResponseRedirect('/quiz/%s/delete_question/' % quiz_id)
 
 
-def delete_multiplechoicequestion(request, MultipleChoiceQuestion_id):
+def delete_multiplechoicequestion(request, quiz_id, MultipleChoiceQuestion_id):
+    if request.user.is_staff is False:
+        print('Keine Berechtigung!')
+        return HttpResponseNotFound('<h1>Keine Berechtigung!</h1>')
     mquestion = get_object_or_404(MultipleChoiceQuestion, id=MultipleChoiceQuestion_id)
     global deleted_question
     deleted_question = unicode(mquestion)
     mquestion.delete()
     global question_delete
     question_delete = 1
-    return HttpResponseRedirect('/quiz/update_question/')
+    return HttpResponseRedirect('/quiz/%s/delete_question/' % quiz_id)
 
 
 def update_quiz(request):
+    # Uebergabe von Profilbild
+    username = request.user.username
+    if username != '':
+        user_rank = get_object_or_404(UserRank, user_fk_id=request.user.id)
+        pro_pic = get_object_or_404(ProfilePicture, id=user_rank.picture_id)
+    else:
+        pro_pic = get_object_or_404(ProfilePicture, id=1)
+
+    if request.user.is_staff is False:
+        print('Keine Berechtigung!')
+        return HttpResponseNotFound('<h1>Keine Berechtigung!</h1>')
     context = RequestContext(request)
     global quiz_delete
     if quiz_delete == 0:
@@ -456,13 +690,15 @@ def update_quiz(request):
             search_query = request.GET.get('search_box')
             all_quiz = Quiz.objects.filter(quiz_title__startswith=search_query)
             if all_quiz.count() != 0:
-                return render(request, 'quiz/update_quiz.html', {'all_quiz': all_quiz}, context)
+                return render(request, 'quiz/update_quiz.html', {'all_quiz': all_quiz, 'pro_pic': pro_pic}, context)
             else:
                 print('Suche ohne Treffer :(')
+                return render(request, 'quiz/update_quiz.html',
+                              {'all_quiz': all_quiz, 'pro_pic': pro_pic, 'empty': True}, context)
         else:
             all_quiz = Quiz.objects.all()
 
-        return render(request, 'quiz/update_quiz.html', {'all_quiz': all_quiz}, context)
+        return render(request, 'quiz/update_quiz.html', {'all_quiz': all_quiz, 'pro_pic': pro_pic}, context)
     else:
         quiz_delete = 0
         global deleted_quiz
@@ -472,17 +708,32 @@ def update_quiz(request):
             all_quiz = Quiz.objects.filter(quiz_title__startswith=search_query)
             if all_quiz.count() != 0:
                 return render(request, 'quiz/update_quiz.html',
-                              {'all_quiz': all_quiz, 'delete': True, 'deleted_quiz': deleted_quiz}, context)
+                              {'all_quiz': all_quiz, 'delete': True, 'deleted_quiz': deleted_quiz, 'pro_pic': pro_pic},
+                              context)
             else:
                 print('Suche ohne Treffer :(')
+                return render(request, 'quiz/update_quiz.html',
+                              {'all_quiz': all_quiz, 'delete': True, 'empty': True, 'deleted_quiz': deleted_quiz,
+                               'pro_pic': pro_pic}, context)
         else:
             all_quiz = Quiz.objects.all()
 
         return render(request, 'quiz/update_quiz.html',
-                      {'all_quiz': all_quiz, 'delete': True, 'deleted_quiz': deleted_quiz}, context)
+                      {'all_quiz': all_quiz, 'delete': True, 'deleted_quiz': deleted_quiz, 'pro_pic': pro_pic}, context)
 
 
 def update_course(request):
+    # Uebergabe von Profilbild
+    username = request.user.username
+    if username != '':
+        user_rank = get_object_or_404(UserRank, user_fk_id=request.user.id)
+        pro_pic = get_object_or_404(ProfilePicture, id=user_rank.picture_id)
+    else:
+        pro_pic = get_object_or_404(ProfilePicture, id=1)
+
+    if request.user.is_staff is False:
+        print('Keine Berechtigung!')
+        return HttpResponseNotFound('<h1>Keine Berechtigung!</h1>')
     context = RequestContext(request)
     global course_delete
     if course_delete == 0:
@@ -492,12 +743,15 @@ def update_course(request):
             all_course = Course.objects.filter(course_title__startswith=search_query)
             print(all_course)
             if all_course.count() != 0:
-                return render(request, 'quiz/update_course.html', {'all_course': all_course}, context)
+                return render(request, 'quiz/update_course.html', {'all_course': all_course, 'pro_pic': pro_pic},
+                              context)
             else:
                 print('Suche ohne Treffer :(')
+                return render(request, 'quiz/update_course.html',
+                              {'all_course': all_course, 'pro_pic': pro_pic, 'empty': True}, context)
         else:
             all_course = Course.objects.all()
-        return render(request, 'quiz/update_course.html', {'all_course': all_course}, context)
+        return render(request, 'quiz/update_course.html', {'all_course': all_course, 'pro_pic': pro_pic}, context)
     else:
         course_delete = 0
 
@@ -509,16 +763,29 @@ def update_course(request):
             if all_course.count() != 0:
                 global deleted_course
                 return render(request, 'quiz/update_course.html',
-                              {'all_course': all_course, 'delete': True, 'deleted_course': deleted_course}, context)
+                              {'all_course': all_course, 'delete': True, 'deleted_course': deleted_course,
+                               'pro_pic': pro_pic}, context)
             else:
                 print('Suche ohne Treffer :(')
         else:
             all_course = Course.objects.all()
         return render(request, 'quiz/update_course.html',
-                      {'all_course': all_course, 'delete': True, 'deleted_course': deleted_course}, context)
+                      {'all_course': all_course, 'delete': True, 'deleted_course': deleted_course, 'pro_pic': pro_pic},
+                      context)
 
 
 def update_question(request):
+    # Uebergabe von Profilbild
+    username = request.user.username
+    if username != '':
+        user_rank = get_object_or_404(UserRank, user_fk_id=request.user.id)
+        pro_pic = get_object_or_404(ProfilePicture, id=user_rank.picture_id)
+    else:
+        pro_pic = get_object_or_404(ProfilePicture, id=1)
+
+    if request.user.is_staff is False:
+        print('Keine Berechtigung!')
+        return HttpResponseNotFound('<h1>Keine Berechtigung!</h1>')
     context = RequestContext(request)
     global question_delete
     global deleted_question
@@ -532,7 +799,7 @@ def update_question(request):
             return render(request, 'quiz/update_question.html', {'tquestion': tquestion,
                                                                  'equestion': equestion,
                                                                  'sequestion': squestion,
-                                                                 'mquestion': mquestion}, context)
+                                                                 'mquestion': mquestion, 'pro_pic': pro_pic}, context)
         else:
             tquestion = TFQuestion.objects.all()
             equestion = EssayQuestion.objects.all()
@@ -541,7 +808,7 @@ def update_question(request):
         return render(request, 'quiz/update_question.html', {'tquestion': tquestion,
                                                              'equestion': equestion,
                                                              'sequestion': squestion,
-                                                             'mquestion': mquestion}, context)
+                                                             'mquestion': mquestion, 'pro_pic': pro_pic}, context)
     else:
         question_delete = 0
         if request.GET.get('Suchen') == 'Suchen':
@@ -554,7 +821,8 @@ def update_question(request):
                                                                  'equestion': equestion,
                                                                  'sequestion': squestion,
                                                                  'mquestion': mquestion, 'delete': True,
-                                                                 'deleted_question': deleted_question}, context)
+                                                                 'deleted_question': deleted_question,
+                                                                 'pro_pic': pro_pic}, context)
         else:
             tquestion = TFQuestion.objects.all()
             equestion = EssayQuestion.objects.all()
@@ -564,10 +832,19 @@ def update_question(request):
                                                              'equestion': equestion,
                                                              'sequestion': squestion,
                                                              'mquestion': mquestion, 'delete': True,
-                                                             'deleted_question': deleted_question}, context)
+                                                             'deleted_question': deleted_question, 'pro_pic': pro_pic},
+                      context)
 
 
 def answer_quiz(request, quiz_id):
+    # Uebergabe von Profilbild
+    username = request.user.username
+    if username != '':
+        user_rank = get_object_or_404(UserRank, user_fk_id=request.user.id)
+        pro_pic = get_object_or_404(ProfilePicture, id=user_rank.picture_id)
+    else:
+        pro_pic = get_object_or_404(ProfilePicture, id=1)
+    user = request.user
     # return HttpResponse(1)
     quiz = get_object_or_404(Quiz, pk=quiz_id)
 
@@ -740,12 +1017,12 @@ def answer_quiz(request, quiz_id):
             print("gesamtpunktzahl" + str(gesamtpunktzahl))
             user_id = request.user.id
             for i in (Ergebnis.objects.all()):
-                if str(i.quiz) == str(quiz):
+                if str(i.quiz) == str(quiz_id):
                     if str(i.user_id) == str(user_id):
                         if i.punkte < gesamtpunktzahl:
                             i.delete()
                             user_id = request.user.id
-                            erg_obj = Ergebnis(quiz=quiz, punkte=gesamtpunktzahl, user_id=user_id)
+                            erg_obj = Ergebnis(quiz=quiz_id, punkte=gesamtpunktzahl, user_id=user_id)
                             erg_obj.save()
 
                             # update userrank.total_score
@@ -758,39 +1035,44 @@ def answer_quiz(request, quiz_id):
 
                             # update userrank.rank
                             obj_user_rank = get_object_or_404(UserRank, user_fk_id=user_id)
-                            if obj_user_rank.total_score > 20:
+                            if obj_user_rank.total_score > 100:
                                 obj_user_rank.title = 'Erfahrener'
                                 obj_user_rank.rank = 1
-                                if obj_user_rank.total_score > 40:
+                                if obj_user_rank.total_score > 500:
                                     obj_user_rank.title = 'Schlaumeier'
                                     obj_user_rank.rank = 2
-                                    if obj_user_rank.total_score > 60:
+                                    if obj_user_rank.total_score > 2000:
                                         obj_user_rank.title = 'Quiz Held'
                                         obj_user_rank.rank = 3
-                                        if obj_user_rank.total_score > 80:
-                                            obj_user_rank.title = 'Champ'
+                                        if obj_user_rank.total_score > 5000:
+                                            obj_user_rank.title = 'Champion'
                                             obj_user_rank.rank = 4
-                                            if obj_user_rank.total_score > 100:
+                                            if obj_user_rank.total_score > 10000:
                                                 obj_user_rank.title = 'Grossmeister'
                                                 obj_user_rank.rank = 5
+                            else:
+                                obj_user_rank.title = 'Neuling'
                             obj_user_rank.save(update_fields=["rank"])
                             obj_user_rank.save(update_fields=["title"])
 
                             return render_to_response('quiz/finish.html',
-                                                      {'gesamtpunktzahl': gesamtpunktzahl, 'quiz': quiz,
-                                                       'highscore': True})
+                                                      {'gesamtpunktzahl': gesamtpunktzahl, 'user': user,
+                                                       'quiz': quiz, 'highscore': True, 'pro_pic': pro_pic})
 
             for i in (Ergebnis.objects.all()):
-                if str(i.quiz) == str(quiz):
+                if str(i.quiz) == str(quiz_id):
                     if str(i.user_id) == str(user_id):
                         bestleistung = i.punkte
                         return render_to_response('quiz/finish.html', {'gesamtpunktzahl': gesamtpunktzahl, 'quiz': quiz,
-                                                                       'bestleistung': bestleistung,
-                                                                       'keinHighscore': True})
-            erg_obj = Ergebnis(quiz=quiz, punkte=gesamtpunktzahl, user_id=user_id)
-            erg_obj.save()
+                                                                       'bestleistung': bestleistung, 'user': user,
+                                                                       'keinHighscore': True, 'pro_pic': pro_pic})
+
+            if username != '':
+                erg_obj = Ergebnis(quiz=quiz_id, punkte=gesamtpunktzahl, user_id=user_id)
+                erg_obj.save()
             return render_to_response('quiz/finish.html',
-                                      {'gesamtpunktzahl': gesamtpunktzahl, 'quiz': quiz, 'highscore': True})
+                                      {'gesamtpunktzahl': gesamtpunktzahl, 'user': user, 'quiz': quiz,
+                                       'highscore': True, 'pro_pic': pro_pic})
 
         else:
             array_index = array_index + 1
@@ -809,16 +1091,20 @@ def answer_quiz(request, quiz_id):
 
             if question.question_type == 'multiplechoice':
                 return render_to_response('quiz/answer_multiplechoice.html',
-                                          {'question': question, 'stand': stand, 'prozent': prozent})
+                                          {'question': question, 'user': user, 'stand': stand, 'prozent': prozent,
+                                           'pro_pic': pro_pic})
             elif question.question_type == 'singlechoice':
                 return render_to_response('quiz/answer_singlechoice.html',
-                                          {'question': question, 'stand': stand, 'prozent': prozent})
+                                          {'question': question, 'user': user, 'stand': stand, 'prozent': prozent,
+                                           'pro_pic': pro_pic})
             elif question.question_type == 'truefalse':
                 return render_to_response('quiz/answer_truefalse.html',
-                                          {'question': question, 'stand': stand, 'prozent': prozent})
+                                          {'question': question, 'user': user, 'stand': stand, 'prozent': prozent,
+                                           'pro_pic': pro_pic})
             elif question.question_type == 'essay':
                 return render_to_response('quiz/answer_essay.html',
-                                          {'question': question, 'stand': stand, 'prozent': prozent})
+                                          {'question': question, 'user': user, 'stand': stand, 'prozent': prozent,
+                                           'pro_pic': pro_pic})
 
             return HttpResponseRedirect('/quiz/')
 
@@ -831,10 +1117,12 @@ def answer_quiz(request, quiz_id):
         if str(myList[array_index].true_or_false) == 'True':
 
             antwort_ist = 'Richtig'
-            return render_to_response('quiz/answer_truefalse.html', {'question': question, 'r': True})
+            return render_to_response('quiz/answer_truefalse.html',
+                                      {'question': question, 'user': user, 'pro_pic': pro_pic, 'r': True})
         else:
             antwort_ist = 'Falsch'
-            return render_to_response('quiz/answer_truefalse.html', {'question': question, 'f': True})
+            return render_to_response('quiz/answer_truefalse.html',
+                                      {'question': question, 'user': user, 'pro_pic': pro_pic, 'f': True})
 
 
     elif request.GET.get('Fertig') == 'wahr':
@@ -862,11 +1150,12 @@ def answer_quiz(request, quiz_id):
             antwort_ist = 'Richtig'
             return render_to_response('quiz/answer_truefalse.html',
                                       {'question': question, 'r': True, 'stand': stand, 'prozent': prozent,
-                                       'punktzahl': punktzahl})
+                                       'punktzahl': punktzahl, 'user': user, 'pro_pic': pro_pic})
         else:
             antwort_ist = 'Falsch'
             return render_to_response('quiz/answer_truefalse.html',
-                                      {'question': question, 'f': True, 'stand': stand, 'prozent': prozent})
+                                      {'question': question, 'f': True, 'stand': stand, 'user': user,
+                                       'prozent': prozent, 'pro_pic': pro_pic})
 
 
 
@@ -893,11 +1182,12 @@ def answer_quiz(request, quiz_id):
             antwort_ist = 'Richtig'
             return render_to_response('quiz/answer_truefalse.html',
                                       {'question': question, 'r': True, 'stand': stand, 'prozent': prozent,
-                                       'punktzahl': punktzahl})
+                                       'punktzahl': punktzahl, 'pro_pic': pro_pic, 'user': user})
         else:
             antwort_ist = 'Falsch'
             return render_to_response('quiz/answer_truefalse.html',
-                                      {'question': question, 'f': True, 'stand': stand, 'prozent': prozent})
+                                      {'question': question, 'f': True, 'stand': stand, 'user': user,
+                                       'prozent': prozent, 'pro_pic': pro_pic})
 
 
 
@@ -922,11 +1212,12 @@ def answer_quiz(request, quiz_id):
             antwort_ist = 'Richtig'
             return render_to_response('quiz/answer_truefalse.html',
                                       {'question': question, 'r': True, 'stand': stand, 'prozent': prozent,
-                                       'punktzahl': punktzahl})
+                                       'punktzahl': punktzahl, 'user': user, 'pro_pic': pro_pic})
         else:
             antwort_ist = 'Falsch'
             return render_to_response('quiz/answer_truefalse.html',
-                                      {'question': question, 'f': True, 'stand': stand, 'prozent': prozent})
+                                      {'question': question, 'user': user, 'f': True, 'stand': stand,
+                                       'prozent': prozent, 'pro_pic': pro_pic})
 
 
 
@@ -989,7 +1280,8 @@ def answer_quiz(request, quiz_id):
 
                             antwort_ist = 'Richtig'
                             return render_to_response('quiz/answer_multiplechoice.html',
-                                                      {'question': question, 'r': True})
+                                                      {'question': question, 'r': True, 'user': user,
+                                                       'pro_pic': pro_pic})
                             # else:
                             #   antwort_ist = 'Falsch'
                             ##  return render_to_response('quiz/answer_multiplechoice.html',
@@ -1008,19 +1300,20 @@ def answer_quiz(request, quiz_id):
                         else:
                             question = myList[array_index]
                             return render_to_response('quiz/answer_multiplechoice.html',
-                                                      {'question': question, 'f': True})
+                                                      {'question': question, 'f': True, 'user': user,
+                                                       'pro_pic': pro_pic})
                     else:
                         question = myList[array_index]
                         return render_to_response('quiz/answer_multiplechoice.html',
-                                                  {'question': question, 'f': True})
+                                                  {'question': question, 'f': True, 'user': user, 'pro_pic': pro_pic})
                 else:
                     question = myList[array_index]
                     return render_to_response('quiz/answer_multiplechoice.html',
-                                              {'question': question, 'f': True})
+                                              {'question': question, 'f': True, 'user': user, 'pro_pic': pro_pic})
             else:
                 question = myList[array_index]
                 return render_to_response('quiz/answer_multiplechoice.html',
-                                          {'question': question, 'f': True})
+                                          {'question': question, 'f': True, 'user': user, 'pro_pic': pro_pic})
 
 
 
@@ -1053,11 +1346,12 @@ def answer_quiz(request, quiz_id):
                 antwort_ist = 'Richtig'
                 return render_to_response('quiz/answer_singlechoice.html',
                                           {'question': question, 'r': True, 'stand': stand, 'prozent': prozent,
-                                           'punktzahl': punktzahl})
+                                           'punktzahl': punktzahl, 'user': user, 'pro_pic': pro_pic})
             else:
                 antwort_ist = 'Falsch'
                 return render_to_response('quiz/answer_singlechoice.html',
-                                          {'question': question, 'f': True, 'stand': stand, 'prozent': prozent})
+                                          {'question': question, 'user': user, 'f': True, 'stand': stand,
+                                           'prozent': prozent, 'pro_pic': pro_pic})
 
 
 
@@ -1085,20 +1379,25 @@ def answer_quiz(request, quiz_id):
                 antwort_ist = 'Richtig'
                 return render_to_response('quiz/answer_essay.html',
                                           {'question': question, 'r': True, 'stand': stand, 'prozent': prozent,
-                                           'punktzahl': punktzahl})
+                                           'punktzahl': punktzahl, 'user': user, 'pro_pic': pro_pic})
             else:
                 antwort_ist = 'Falsch'
                 return render_to_response('quiz/answer_essay.html',
-                                          {'question': question, 'f': True, 'stand': stand, 'prozent': prozent})
+                                          {'question': question, 'f': True, 'user': user, 'stand': stand,
+                                           'prozent': prozent, 'pro_pic': pro_pic})
 
     global myList
     if len(myList) == 0:
         search_query = ''
         message = 'Quiz leer'
-        all_quiz = Quiz.objects.filter(quiz_title__startswith=search_query)
+        print('duhgkddbhgdfjghdhgkdfshb')
+
+        all_quiz = Quiz.objects.filter(quiz_title__startswith=search_query,
+                                       coursefk_id=Quiz.objects.filter(id=quiz_id)[0].coursefk_id)
 
         # return HttpResponseRedirect('/quiz/quiz_select/')
-        return render(request, 'quiz/quiz_select.html', {'all_quiz': all_quiz, 'message': message, 'e': True})
+        return render(request, 'quiz/quiz_select.html',
+                      {'all_quiz': all_quiz, 'user': user, 'message': message, 'e': True, 'pro_pic': pro_pic})
 
     else:
 
@@ -1136,16 +1435,20 @@ def answer_quiz(request, quiz_id):
         print(antwort_ist)
         if question.question_type == 'multiplechoice':
             return render_to_response('quiz/answer_multiplechoice.html',
-                                      {'question': question, 'stand': stand, 'prozent': prozent})
+                                      {'question': question, 'stand': stand, 'user': user, 'prozent': prozent,
+                                       'pro_pic': pro_pic})
         elif question.question_type == 'singlechoice':
             return render_to_response('quiz/answer_singlechoice.html',
-                                      {'question': question, 'stand': stand, 'prozent': prozent})
+                                      {'question': question, 'stand': stand, 'user': user, 'prozent': prozent,
+                                       'pro_pic': pro_pic})
         elif question.question_type == 'truefalse':
             return render_to_response('quiz/answer_truefalse.html',
-                                      {'question': question, 'stand': stand, 'prozent': prozent})
+                                      {'question': question, 'stand': stand, 'user': user, 'prozent': prozent,
+                                       'pro_pic': pro_pic})
         elif question.question_type == 'essay':
             return render_to_response('quiz/answer_essay.html',
-                                      {'question': question, 'stand': stand, 'prozent': prozent})
+                                      {'question': question, 'stand': stand, 'user': user, 'prozent': prozent,
+                                       'pro_pic': pro_pic})
 
 
 def lobbys(request):
@@ -1216,7 +1519,7 @@ def lobby_entry(request, lobby_id):
         entryLobby = EntryLobbyForm
         print all_quiz
         print Lobby.objects.get(id=lobby_id).owner is not request.user.id
-        if request.POST.get('starten') and Lobby.objects.get(id=lobby_id).owner is not request.user.id:
+        if request.POST.get('starten'):
             print "ich will starten"
             start_quiz(lobby_id)
             return render_to_response('quiz/lobby_entry.html',
@@ -1415,11 +1718,10 @@ def update_current_question(lobby_id,user_id):
         print "exception in question update"
         return False
 
-def save_multiplayer_points(quizname,points,userid):
-    print "save"
-    result = MultiplayerErgebnis(quiz=str(quizname),points=points,user_id=userid)
+def save_multiplayer_points(quizname, points, userid):
+    print("save")
+    result = MultiplayerErgebnis(quiz=str(quizname), points=points, user_id=userid)
     result.save()
-
 
 
 def start_quiz(lobby_id):
@@ -1428,14 +1730,14 @@ def start_quiz(lobby_id):
         lobby.started = True
         lobby.save()
     except Exception:
-        print "failed to start"
+        print("failed to start")
 
 
 def check_password(lobby_id, password):
     if password == Lobby.objects.get(id=lobby_id).lobby_password:
         return True
     else:
-        print "falsches pw"
+        print("falsches pw")
         return False
 
 
@@ -1443,7 +1745,7 @@ def check_tf_answer(question_id, boolean):
     if TFQuestion.objects.get(id=question_id).true_or_false == boolean:
         return True
     else:
-        print "returne false"
+        print("returne false")
         return False
 
 
@@ -1452,7 +1754,7 @@ def check_multi_answer(question_id, answer1, answer2, answer3, answer4):
         if str(MultipleChoiceQuestion.objects.get(id=question_id).correct_answer_2) == answer2:
             if str(MultipleChoiceQuestion.objects.get(id=question_id).correct_answer_3) == answer3:
                 if str(MultipleChoiceQuestion.objects.get(id=question_id).correct_answer_4) == answer4:
-                    print "antwort ist richtig"
+                    print("antwort ist richtig")
                     return True
                 else:
                     return False
@@ -1474,7 +1776,7 @@ def check_essay_answer(question_id, answer):
 def getuserlistbylobbyid(request):
     lobby_id = UserInLobby.objects.get(user_id=request.user.id).lobby_id
     object = UserInLobby.objects.filter(lobby_id=lobby_id)
-    print "habs versucht"
+    print("habs versucht")
     return render_to_response('quiz/lobby_entry.html', {'all_user': object})
 
 
@@ -1496,47 +1798,70 @@ def Navi(request):
     global account_updated
     if account_updated == 0:
         return render(request, 'Navi.html', {'username': username, 'email': email, 'account': account,
-                                             'lastlogin': lastlogin, 'last_name': last_name})
+                                             'lastlogin': lastlogin, 'user': user, 'last_name': last_name,
+                                             'pro_pic': pro_pic})
     else:
         account_updated = 0
         return render(request, 'Navi.html', {'username': username, 'email': email, 'account': account,
                                              'lastlogin': lastlogin, 'last_name': last_name,
-                                             'account_updated': True})
+                                             'account_updated': True, 'user': user, 'pro_pic': pro_pic})
 
 
 def course_select_propose(request):
+    # Uebergabe von Profilbild
+    username = request.user.username
+    if username != '':
+        user_rank = get_object_or_404(UserRank, user_fk_id=request.user.id)
+        pro_pic = get_object_or_404(ProfilePicture, id=user_rank.picture_id)
+    else:
+        pro_pic = get_object_or_404(ProfilePicture, id=1)
     context = RequestContext(request)
     if request.GET.get('Suchen') == 'Suchen':
         search_query = request.GET.get('search_box')
         all_course = Course.objects.filter(course_title__startswith=search_query)
         if all_course.count() != 0:
-            return render(request, 'quiz/course_select_propose.html', {'all_course': all_course}, context)
+            return render(request, 'quiz/course_select_propose.html', {'all_course': all_course, 'pro_pic': pro_pic},
+                          context)
         else:
             print('Suche ohne Treffer :(')
     else:
         all_course = Course.objects.all()
         print(all_course)
-    return render(request, 'quiz/course_select_propose.html', {'all_course': all_course}, context)
+    return render(request, 'quiz/course_select_propose.html', {'all_course': all_course, 'pro_pic': pro_pic}, context)
 
 
 def quiz_select_propose(request, course_id):
+    # Uebergabe von Profilbild
+    username = request.user.username
+    if username != '':
+        user_rank = get_object_or_404(UserRank, user_fk_id=request.user.id)
+        pro_pic = get_object_or_404(ProfilePicture, id=user_rank.picture_id)
+    else:
+        pro_pic = get_object_or_404(ProfilePicture, id=1)
     context = RequestContext(request)
 
     if request.GET.get('Suchen') == 'Suchen':
         search_query = request.GET.get('search_box')
         all_quiz = Quiz.objects.filter(coursefk_id=course_id, quiz_title__startswith=search_query)
         if all_quiz.count() != 0:
-            return render(request, 'quiz/quiz_select_propose.html', {'all_quiz': all_quiz}, context)
+            return render(request, 'quiz/quiz_select_propose.html', {'all_quiz': all_quiz, 'pro_pic': pro_pic}, context)
         else:
             print('Suche ohne Treffer :(')
     else:
 
         all_quiz = Quiz.objects.filter(coursefk_id=course_id)
         print(all_quiz)
-    return render(request, 'quiz/quiz_select_propose.html', {'all_quiz': all_quiz}, context)
+    return render(request, 'quiz/quiz_select_propose.html', {'all_quiz': all_quiz, 'pro_pic': pro_pic}, context)
 
 
 def propose_question(request, quiz_id):
+    # Uebergabe von Profilbild
+    username = request.user.username
+    if username != '':
+        user_rank = get_object_or_404(UserRank, user_fk_id=request.user.id)
+        pro_pic = get_object_or_404(ProfilePicture, id=user_rank.picture_id)
+    else:
+        pro_pic = get_object_or_404(ProfilePicture, id=1)
     quiz = Quiz.objects.filter(id=quiz_id)
     print(quiz[0])
     course = Course.objects.filter(id=quiz[0].coursefk_id)
@@ -1555,8 +1880,8 @@ def propose_question(request, quiz_id):
                                   {'form': form, 'quiz_id': quiz_id, 'Question': "Begriffs Frage",
                                    'tquestion': tquestion,
                                    'equestion': equestion,
-                                   'sequestion': squestion,
-                                   'mquestion': mquestion}, context)
+                                   'squestion': squestion,
+                                   'mquestion': mquestion, 'pro_pic': pro_pic}, context)
 
     if request.POST.get('single') == 'single':
         form = SingleChoiceQuestionForm()
@@ -1564,8 +1889,8 @@ def propose_question(request, quiz_id):
                                   {'form': form, 'quiz_id': quiz_id, 'Question': "Single Choice Question",
                                    'tquestion': tquestion,
                                    'equestion': equestion,
-                                   'sequestion': squestion,
-                                   'mquestion': mquestion}, context)
+                                   'squestion': squestion,
+                                   'mquestion': mquestion, 'pro_pic': pro_pic}, context)
 
     if request.POST.get('multi') == 'MultipleChoice Frage':
         form = MultipleChoiceQuestionForm()
@@ -1573,8 +1898,8 @@ def propose_question(request, quiz_id):
                                   {'form': form, 'quiz_id': quiz_id, 'Question': "Multiple Choice Frage", 'a': True,
                                    'tquestion': tquestion,
                                    'equestion': equestion,
-                                   'sequestion': squestion,
-                                   'mquestion': mquestion}, context)
+                                   'squestion': squestion,
+                                   'mquestion': mquestion, 'pro_pic': pro_pic}, context)
 
     if request.POST.get('truefalse') == 'WahrFalsch Frage':
         form = TFQuestionForm()
@@ -1582,8 +1907,8 @@ def propose_question(request, quiz_id):
                                   {'form': form, 'quiz_id': quiz_id, 'Question': "Wahr/Falsch Frage", 'b': True,
                                    'tquestion': tquestion,
                                    'equestion': equestion,
-                                   'sequestion': squestion,
-                                   'mquestion': mquestion}, context)
+                                   'squestion': squestion,
+                                   'mquestion': mquestion, 'pro_pic': pro_pic}, context)
 
     if request.POST.get('essay_question_text'):
         form = EssayQuestionForm(request.POST)
@@ -1597,7 +1922,7 @@ def propose_question(request, quiz_id):
                                   {'form': form, 'quiz_id': quiz_id, 'Question': "Begriffs Frage",
                                    'tquestion': tquestion,
                                    'equestion': equestion,
-                                   'sequestion': squestion,
+                                   'squestion': squestion, 'pro_pic': pro_pic,
                                    'mquestion': mquestion, 'saved': True, 'saved_question': q_obj}, context)
 
     if request.POST.get('single_question_text'):
@@ -1613,7 +1938,7 @@ def propose_question(request, quiz_id):
         return render_to_response('quiz/question_propose.html',
                                   {'form': form, 'quiz_id': quiz_id, 'tquestion': tquestion,
                                    'equestion': equestion,
-                                   'sequestion': squestion,
+                                   'squestion': squestion, 'pro_pic': pro_pic,
                                    'mquestion': mquestion, 'saved': True, 'saved_question': scq_obj}, context)
 
     if request.POST.get('tf_question_text'):
@@ -1635,7 +1960,7 @@ def propose_question(request, quiz_id):
                                   {'form': form, 'quiz_id': quiz_id, 'Question': "True or False Question", 'b': True,
                                    'tquestion': tquestion,
                                    'equestion': equestion,
-                                   'sequestion': squestion,
+                                   'squestion': squestion, 'pro_pic': pro_pic,
                                    'mquestion': mquestion, 'saved': True, 'saved_question': mq_obj},
 
                                   context)
@@ -1644,7 +1969,7 @@ def propose_question(request, quiz_id):
         form = MultipleChoiceQuestionForm(request.POST)
         if form.is_valid():
             if str(request.POST.get('drop')) == "1":
-                correct_answer_1 = True
+                correct_answer = '1'
 
                 print(str(request.POST.get('drop')))
 
@@ -1652,35 +1977,33 @@ def propose_question(request, quiz_id):
             else:
                 correct_answer_1 = False
             if str(request.POST.get('drop')) == "2":
-                correct_answer_2 = True
+                correct_answer = '2'
             else:
                 correct_answer_2 = False
             if str(request.POST.get('drop')) == "3":
-                correct_answer_3 = True
+                correct_answer = '3'
             else:
                 correct_answer_3 = False
             if str(request.POST.get('drop')) == "4":
-                correct_answer_4 = True
+                correct_answer = '4'
             else:
                 correct_answer_4 = False
 
-            mq_obj = ProposeMultipleChoiceQuestion(multi_question_text=request.POST.get('multi_question_text'),
-                                                   answer_text1=request.POST.get('answer_text1'),
-                                                   answer_text2=request.POST.get('answer_text2'),
-                                                   answer_text3=request.POST.get('answer_text3'),
-                                                   answer_text4=request.POST.get('answer_text4'),
-                                                   correct_answer_1=correct_answer_1,
-                                                   correct_answer_2=correct_answer_2,
-                                                   correct_answer_3=correct_answer_3,
-                                                   correct_answer_4=correct_answer_4,
-                                                   quizfk_id=quiz_id, user=request.user.id, dozent=dozent)
+            mq_obj = ProposeSingleChoiceQuestion(single_question_text=request.POST.get('multi_question_text'),
+                                                 answer_text1=request.POST.get('answer_text1'),
+                                                 answer_text2=request.POST.get('answer_text2'),
+                                                 answer_text3=request.POST.get('answer_text3'),
+                                                 answer_text4=request.POST.get('answer_text4'),
+                                                 correct_answer=correct_answer,
+
+                                                 quizfk_id=quiz_id, user=request.user.id, dozent=dozent)
             mq_obj.save()
             form = MultipleChoiceQuestionForm()
             return render_to_response('quiz/question_propose.html',
                                       {'form': form, 'quiz_id': quiz_id, 'Question': "Multiple Choice Question",
                                        'a': True, 'tquestion': tquestion,
                                        'equestion': equestion,
-                                       'sequestion': squestion,
+                                       'squestion': squestion,
                                        'mquestion': mquestion, 'saved': True, 'saved_question': mq_obj},
 
                                       context)
@@ -1690,11 +2013,214 @@ def propose_question(request, quiz_id):
     return render_to_response('quiz/question_propose.html',
                               {'form': form, 'quiz_id': quiz_id, 'Question': "Begriffs Frage", 'tquestion': tquestion,
                                'equestion': equestion,
-                               'sequestion': squestion,
+                               'squestion': squestion, 'pro_pic': pro_pic,
                                'mquestion': mquestion}, context)
 
     if request.POST.get('fertig'):
         return render(request, 'quiz/add_quiz.html', {'tquestion': tquestion,
                                                       'equestion': equestion,
-                                                      'sequestion': squestion,
+                                                      'squestion': squestion, 'pro_pic': pro_pic,
                                                       'mquestion': mquestion}, context)
+
+
+def proposed_questions(request):
+    # Uebergabe von Profilbild
+    username = request.user.username
+    if username != '':
+        user_rank = get_object_or_404(UserRank, user_fk_id=request.user.id)
+        pro_pic = get_object_or_404(ProfilePicture, id=user_rank.picture_id)
+    else:
+        pro_pic = get_object_or_404(ProfilePicture, id=1)
+
+    context = RequestContext(request)
+    global question_delete
+    global deleted_question
+    global propose_question_delete
+    my_id = request.user.id
+
+    if propose_question_save == 0:
+
+        if propose_question_delete == 0:
+
+            tquestion = ProposeTFQuestion.objects.filter(dozent=my_id)
+            equestion = ProposeEssayQuestion.objects.filter(dozent=my_id)
+            squestion = ProposeSingleChoiceQuestion.objects.filter(dozent=my_id)
+            mquestion = ProposeMultipleChoiceQuestion.objects.filter(dozent=my_id)
+            return render(request, 'quiz/proposed_questions.html', {'tquestion': tquestion,
+                                                                    'equestion': equestion,
+                                                                    'squestion': squestion, 'pro_pic': pro_pic,
+                                                                    'mquestion': mquestion}, context)
+        else:
+            propose_question_delete = 0
+
+            tquestion = ProposeTFQuestion.objects.filter(dozent=my_id)
+            equestion = ProposeEssayQuestion.objects.filter(dozent=my_id)
+            squestion = ProposeSingleChoiceQuestion.objects.filter(dozent=my_id)
+            mquestion = ProposeMultipleChoiceQuestion.objects.filter(dozent=my_id)
+            return render(request, 'quiz/proposed_questions.html', {'tquestion': tquestion,
+                                                                    'equestion': equestion,
+                                                                    'squestion': squestion, 'pro_pic': pro_pic,
+                                                                    'mquestion': mquestion, 'delete': True,
+                                                                    'deleted_question': deleted_question}, context)
+    else:
+        global propose_question_save
+        propose_question_save = 0
+        if propose_question_delete == 0:
+
+            tquestion = ProposeTFQuestion.objects.filter(dozent=my_id)
+            equestion = ProposeEssayQuestion.objects.filter(dozent=my_id)
+            squestion = ProposeSingleChoiceQuestion.objects.filter(dozent=my_id)
+            mquestion = ProposeMultipleChoiceQuestion.objects.filter(dozent=my_id)
+            return render(request, 'quiz/proposed_questions.html', {'tquestion': tquestion,
+                                                                    'equestion': equestion,
+                                                                    'squestion': squestion, 'pro_pic': pro_pic,
+                                                                    'mquestion': mquestion, 'save': True}, context)
+        else:
+            propose_question_delete = 0
+
+            tquestion = ProposeTFQuestion.objects.filter(dozent=my_id)
+            equestion = ProposeEssayQuestion.objects.filter(dozent=my_id)
+            squestion = ProposeSingleChoiceQuestion.objects.filter(dozent=my_id)
+            mquestion = ProposeMultipleChoiceQuestion.objects.filter(dozent=my_id)
+            return render(request, 'quiz/proposed_questions.html', {'tquestion': tquestion,
+                                                                    'equestion': equestion,
+                                                                    'squestion': squestion, 'pro_pic': pro_pic,
+                                                                    'mquestion': mquestion, 'delete': True,
+                                                                    'deleted_question': deleted_question}, context)
+
+    if request.GET.get('Fertig') == 'Fertig':
+        return HttpResponseRedirect('/quiz')
+
+
+def show_proposed_truefalse(request, ProposeTFQuestion_id):
+    username = request.user.username
+    if username != '':
+        user_rank = get_object_or_404(UserRank, user_fk_id=request.user.id)
+        pro_pic = get_object_or_404(ProfilePicture, id=user_rank.picture_id)
+    else:
+        pro_pic = get_object_or_404(ProfilePicture, id=1)
+    user = request.user
+    tquestion = get_object_or_404(ProposeTFQuestion, id=ProposeTFQuestion_id)
+    user_id = ProposeTFQuestion.objects.filter(id=ProposeTFQuestion_id)[0].user
+    student = User.objects.filter(id=user_id)[0]
+    quiz_id = tquestion.quizfk_id
+    quiz = Quiz.objects.filter(id=quiz_id)[0]
+    if tquestion.true_or_false == 1:
+        true_or_false = 'wahr'
+        true_or_false_database = 'True'
+    else:
+        true_or_false = 'falsch'
+        true_or_false_database = 'False'
+    if request.GET.get('Verwerfen') == 'Verwerfen':
+        global propose_question_delete
+        propose_question_delete = '1'
+        tquestion.delete()
+        return HttpResponseRedirect('/quiz/proposed_questions/')
+
+    if request.GET.get('Speichern') == 'Speichern':
+        global propose_question_save
+        propose_question_save = 1
+        tf_obj = TFQuestion(tf_question_text=tquestion.tf_question_text,
+                            true_or_false=true_or_false_database,
+                            question_type="truefalse",
+                            quizfk_id=quiz_id)
+        tf_obj.save()
+        tquestion.delete()
+        return HttpResponseRedirect('/quiz/proposed_questions/')
+
+    return render_to_response('quiz/show_proposed_truefalse.html',
+                              {'tquestion': tquestion, 'user': user, 'pro_pic': pro_pic, 'student': student,
+                               'user_id': user_id, 'true_or_false': true_or_false, 'quiz': quiz})
+
+
+def show_proposed_essay(request, ProposeEssayQuestion_id):
+    username = request.user.username
+    if username != '':
+        user_rank = get_object_or_404(UserRank, user_fk_id=request.user.id)
+        pro_pic = get_object_or_404(ProfilePicture, id=user_rank.picture_id)
+    else:
+        pro_pic = get_object_or_404(ProfilePicture, id=1)
+    user = request.user
+    essayquestion = get_object_or_404(ProposeEssayQuestion, id=ProposeEssayQuestion_id)
+    user_id = ProposeEssayQuestion.objects.filter(id=ProposeEssayQuestion_id)[0].user
+    student = User.objects.filter(id=user_id)[0]
+    quiz_id = essayquestion.quizfk_id
+    quiz = Quiz.objects.filter(id=quiz_id)[0]
+    global propose_question_delete
+    print(student)
+    if request.GET.get('Verwerfen') == 'Verwerfen':
+        essayquestion.delete()
+        global propose_question_delete
+        propose_question_delete = '1'
+        return HttpResponseRedirect('/quiz/proposed_questions/')
+
+    if request.GET.get('Speichern') == 'Speichern':
+        global propose_question_save
+        propose_question_save = 1
+        essayf_obj = EssayQuestion(essay_question_text=essayquestion.essay_question_text,
+                                   answer_text=essayquestion.answer_text,
+
+                                   question_type="essay",
+                                   quizfk_id=quiz_id)
+        essayf_obj.save()
+        essayquestion.delete()
+
+        return HttpResponseRedirect('/quiz/proposed_questions/')
+
+    return render_to_response('quiz/show_proposed_essay.html',
+                              {'essayquestion': essayquestion, 'pro_pic': pro_pic, 'user': user, 'student': student,
+                               'user_id': user_id, 'quiz': quiz})
+
+
+def show_proposed_multiplechoice(request, ProposeSingleChoiceQuestion_id):
+    username = request.user.username
+    if username != '':
+        user_rank = get_object_or_404(UserRank, user_fk_id=request.user.id)
+        pro_pic = get_object_or_404(ProfilePicture, id=user_rank.picture_id)
+    else:
+        pro_pic = get_object_or_404(ProfilePicture, id=1)
+    user = request.user
+    multiplechoicequestion = get_object_or_404(ProposeSingleChoiceQuestion, id=ProposeSingleChoiceQuestion_id)
+    user_id = ProposeSingleChoiceQuestion.objects.filter(id=ProposeSingleChoiceQuestion_id)[0].user
+    student = User.objects.filter(id=user_id)[0]
+    quiz_id = multiplechoicequestion.quizfk_id
+    quiz = Quiz.objects.filter(id=quiz_id)[0]
+    correct_answer_id = multiplechoicequestion.correct_answer
+    correct_answer_text = ''
+    if correct_answer_id == '1':
+        correct_answer_text = multiplechoicequestion.answer_text1
+    elif correct_answer_id == '2':
+        correct_answer_text = multiplechoicequestion.answer_text2
+    elif correct_answer_id == '3':
+        correct_answer_text = multiplechoicequestion.answer_text3
+    elif correct_answer_id == '4':
+        correct_answer_text = multiplechoicequestion.answer_text4
+
+    print ('at' + str(correct_answer_text))
+    if request.GET.get('Verwerfen') == 'Verwerfen':
+        global propose_question_delete
+        propose_question_delete = '1'
+        multiplechoicequestion.delete()
+        return HttpResponseRedirect('/quiz/proposed_questions/')
+
+    if request.GET.get('Speichern') == 'Speichern':
+        global propose_question_save
+        propose_question_save = 1
+        multif_obj = SingleChoiceQuestion(single_question_text=multiplechoicequestion.single_question_text,
+                                          correct_answer=correct_answer_id,
+                                          answer_text1=multiplechoicequestion.answer_text1,
+                                          answer_text2=multiplechoicequestion.answer_text2,
+                                          answer_text3=multiplechoicequestion.answer_text3,
+                                          answer_text4=multiplechoicequestion.answer_text4,
+
+                                          question_type="singlechoice",
+                                          quizfk_id=quiz_id)
+        multif_obj.save()
+        multiplechoicequestion.delete()
+
+        return HttpResponseRedirect('/quiz/proposed_questions/')
+
+    return render_to_response('quiz/show_proposed_multiplechoice.html',
+                              {'multiplechoicequestion': multiplechoicequestion, 'correct_answer_id': correct_answer_id,
+                               'correct_answer_text': correct_answer_text, 'pro_pic': pro_pic, 'user': user,
+                               'student': student, 'user_id': user_id, 'quiz': quiz})

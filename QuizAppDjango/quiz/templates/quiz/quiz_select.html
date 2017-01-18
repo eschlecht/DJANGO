@@ -68,12 +68,16 @@
                                 <button  id="zuruck" title="Die Suche zurücksetzen" value="Suche zurücksetzen" href="/quiz_select/">Zurücksetzen</button>
 
                             </form>
+                            <hr>
 
                             {% for quiz in all_quiz %}
-                            <li>
                                 <input  type="button" onclick="location.href='/quiz/{{ quiz.id }}/answer_quiz/';" value="{{ quiz.quiz_title }}" />
-                            </li>
+                                <br>
                             {% endfor %}
+                            {% if empty is True %}
+                                <h4>Suche ohne Ergebnis :(</h4>
+                            Tipp: Anfang des Quiznamens eingeben.
+                            {% endif %}
                         </ul>
 
                     <br><br>

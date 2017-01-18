@@ -20,9 +20,10 @@ class Quiz(models.Model):
 
 
 class Ergebnis(models.Model):
-    quiz = models.CharField(max_length=200)
+    quiz = models.IntegerField()
     punkte = models.IntegerField()
     user_id = models.IntegerField()
+
 
     def __str__(self):
         return self.quiz
@@ -107,6 +108,9 @@ class UserInLobby(models.Model):
     username = models.CharField(max_length=50)
     points = models.IntegerField(default=0)
     current_question = models.IntegerField(default=0)
+
+    def __str__(self):
+        return self.username
 
 class ProposeEssayQuestion(models.Model):
     essay_question_text = models.CharField(max_length=200)

@@ -77,9 +77,47 @@
             }
         }
     </style>
+<script language="JavaScript">
 
+function disableEnterKey(e)
+{
+     var key;
+     if(window.event)
+          key = window.event.keyCode; //IE
+     else
+          key = e.which; //firefox
+
+     return (key != 13);
+}
+
+</script>
+    <script>
+function backButtonOverride()
+{
+  // Work around a Safari bug
+  // that sometimes produces a blank page
+  setTimeout("backButtonOverrideBody()", 1);
+
+}
+
+function backButtonOverrideBody()
+{
+  // Works if we backed up to get here
+  try {
+    history.forward();
+  } catch (e) {
+    // OK to ignore
+  }
+  // Every quarter-second, try again. The only
+  // guaranteed method for Opera, Firefox,
+  // and Safari, which don't always call
+  // onLoad but *do* resume any timers when
+  // returning to a page
+  setTimeout("backButtonOverrideBody()", 500);
+}
+</script>
 </head>
-<body>
+<body OnKeyPress="return disableKeyPress(event)" onLoad="backButtonOverride()">
 <div id="webseite">
     <div id="header">
         <h2>Multiplayer</h2>
@@ -201,7 +239,7 @@
             <form method="post" id="essay" name="essayform"><br>
                 <input type=text title="Bitte geben sie eine Antwort ein!" placeholder="Enter Your answer here!"
                        name="answer"
-                       required autofocus autocomplete="False">
+                       required autofocus autocomplete="False" onkeypress="return disableEnterKey(event)">
                 <br><br>
             </form>
 

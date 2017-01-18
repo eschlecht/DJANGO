@@ -4,13 +4,13 @@ from django import forms
 
 class UserForm(forms.ModelForm):
     password = forms.CharField(widget=forms.PasswordInput(
-           attrs = { 'placeholder': 'Passwort einfuegen'}) )
+           attrs = { 'placeholder': 'Passwort einfuegen'}), help_text='Passwort')
     username = forms.CharField(widget=forms.TextInput(
-           attrs = { 'placeholder': 'Benutzername einfuegen'}) )
+           attrs = { 'placeholder': 'Benutzername einfuegen'}), help_text='Accountname')
     last_name = forms.CharField(widget=forms.TextInput(
-        attrs={'placeholder': 'Name einfuegen'}))
+        attrs={'placeholder': 'Name einfuegen'}), help_text='Name')
     email = forms.CharField(widget=forms.TextInput(
-        attrs={'placeholder': 'Email einfuegen'}))
+        attrs={'placeholder': 'Email einfuegen'}), help_text='E-Mail')
 
     class Meta:
         model = User

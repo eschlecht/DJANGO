@@ -61,7 +61,12 @@
             <div id="main">
                 <div id="inhalt">
                     <br>
+                    {% if rename == 1 %}
+                    <h2>Kurs umbenennen!</h2>
+                    {% else %}
                     <h2>Kurs erstellen!</h2>
+                    {% endif %}
+
                     <form id = "CourseForm" method="post" action="" >
                         {% for field in form.visible_fields %}
                             {{field.errors}}

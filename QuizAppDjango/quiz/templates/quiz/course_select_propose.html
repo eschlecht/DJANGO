@@ -50,18 +50,9 @@
 
         <div id="webseite" >
             <div id="header">
-                <h2> DJANGO UNCHAINED </h2>
-                <ul class="topnav" id="myTopnav">
-                    <li><a href="javascript:history.back()"><span class="glyphicon glyphicon-arrow-left"></span></a></li>
-                  <li><a href="#home" onclick="location.href='/quiz/';">Hauptmenü</a></li>
-                  <li><a href="#news" onclick="location.href='/quiz/course_select/';">Quiz spielen</a></li>
-                  <li><a href="#about" onclick="location.href='/quiz/settings/';">Quiz konfigurieren</a></li>
-                  <li><a href="#about" onclick="location.href='/account/';">Account</a></li>
-                    <li><a href="javascript:history.forward()"><span class="glyphicon glyphicon-arrow-right"></span></a></li>
-                  <li class="icon">
-                    <a href="javascript:void(0);" onclick="myFunction()">&#9776;</a>
-                  </li>
-                </ul>
+
+                {% include "quiz/Navi.html" %}
+
             </div>
             <div id="main">
                 <div id="inhalt">
@@ -75,9 +66,9 @@
                             </form>
 
                             {% for course in all_course %}
-                            <li>
+                            <hr>
                                 <input  type="button" title="Diesen Kurs zum befüllen wählen" onclick="location.href='/quiz/{{ course.id }}/quiz_select_propose/';" value="{{ course.course_title }}" />
-                            </li>
+                            <br>
                             {% endfor %}
                         </ul>
                     <br><br>

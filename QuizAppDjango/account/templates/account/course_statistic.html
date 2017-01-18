@@ -60,19 +60,37 @@
         <div id="main">
                 <div id="inhalt">
                     <br>
-                    <h2>Highscores aus meinen Kursen von verschiedenen Spielern </h2>
-                    <br>
+                    <h2>Statistiken meiner Quiz </h2>
 
-                    <table border="5">
-                                <tr><th>Quiz: </th><th>Punkte: </th></tr>
+                    {% for tup in tup_list %}
+                    <hr>
+                    <h5>Quiz: {{tup.0}}</h5>
+                        <table border="5" align="center" style="margin: 0px auto;">
+                        <tr><th>Maximal erreichbare Punktzahl</th><th>Durschnittlich erreichte Punktzahl</th></tr>
+
+                        <tr><td> {% if tup.1 == 0 %}
+                                Keine Fragen im Quiz
+                                {% else %}
+                                {{ tup.1 }} Punkte
+                                {% endif %}</td><td>{{tup.2}} Punkte</td></tr>
+                        </table>
+
+                    <table border="5" align="center" style="margin: 0px auto;">
+                                <tr><th>Spieler ID: </th><th>Highscore: </th></tr>
                                 {% for erg in ergebnis %}
-                            <tr><th> {{ erg.quiz }} </th><th> {{ erg.punkte }} Punkte </th></tr>
+                                {% if erg.quiz == tup.0 %}
+                            <tr><td>{{ erg.user_id }}</td> <td>{{erg.punkte}}</td></tr>
+                                {% endif %}
+                                {% endfor %}
+                        </table>
+                            <br>
 
-                        {% endfor %}
+                    {% endfor %}
 
 
-                            </table>
 
+
+                </div>
 
                 </div>
 

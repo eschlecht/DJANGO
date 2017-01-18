@@ -64,9 +64,8 @@
                      {% if all_quiz %}
                         <ul>
                             {% for quiz in all_quiz %}
-                            <li>
                                 <input  type="button" title="Dieses Quiz zum befüllen auswählen" onclick="location.href='/quiz/{{ quiz.id }}/add_question/';" value="{{ quiz.quiz_title }}" />
-                            </li>
+                            <br>
                             {% endfor %}
                         </ul>
                     {% else %}

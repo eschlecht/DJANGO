@@ -60,13 +60,12 @@
             <div id="main">
                 <div id="inhalt">
                     <br>
-                    <h2>Wähle einen Kurs aus, der befüllt werden soll!</h2>
-                     {% if all_course %}
+                    <h2>In welchem Kurs soll das Quiz erstellt werden?</h2>
+                     {% if all_course != 0  %}
                         <ul>
                             {% for course in all_course %}
-                            <li>
                                 <input  type="button" title="Diesesn Kurs zum befüllen auswählen" onclick="location.href='/quiz/{{ course.id }}/add_quiz/';" value="{{ course.course_title }}" />
-                            </li>
+                            <br>
                             {% endfor %}
                         </ul>
                     {% else %}

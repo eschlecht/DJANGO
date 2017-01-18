@@ -84,13 +84,16 @@
                         <strong>Super!</strong> Die Antwort war richtig. <br> Du bekommst {{punktzahl}} Punkt(e)
                             </div>
                             <input id="Weiter1" title="nächste Frag beantworten/Quiz beenden" type=submit value="Weiter" name="Weiter">
-
+                            <br>
+                            <a target="_blank" href="https://www.google.de/#q={{question.tf_question_text}}"><input type="button" value="Mehr zur Frage recherchieren"></a>
                             {% elif f %}
                             <div class="alert alert-danger">
                         <strong>Schade!</strong> Die Antwort war leider Falsch.
-                            </div><
-                            <input id="Weiter2" title="nächste Frag beantworten/Quiz beenden" type=submit value="Weiter" name="Weiter">
+                            </div>
 
+                            <input id="Weiter2" title="nächste Frag beantworten/Quiz beenden" type=submit value="Weiter" name="Weiter">
+                            <br>
+                            <a target="_blank" href="https://www.google.de/#q={{question.tf_question_text}}"><input type="button" value="Mehr zur Frage recherchieren"></a>
                             {% else %}
                            <input id="verifyAnswer1" title="die Frage ist Wahr" type=submit value="wahr" name="Fertig">
                             <input id="verifyAnswer2" title="die Frage ist Falsch" type=submit value="falsch" name="Fertig">

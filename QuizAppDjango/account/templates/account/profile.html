@@ -9,9 +9,6 @@
     <title>Profil!</title>
 
 <style>
-
-        {% include "quiz/Dropdown.html" %}
-
         @media screen and (max-width:680px) {
   ul.topnav li:not(:first-child) {display: none;}
   ul.topnav li.icon {
@@ -62,8 +59,16 @@
                     <br>
                     <h2>Benutzerprofil</h2>
                     <br>
+                    <h5>Titel: {{ user_rank.title }}
+                    <br>
+                        Accountname: {{user.username}}
+                    <br>
+                    Rang: {{user_rank.rank}}</h5>
+
+                    <table align="center" style="margin: 0px auto;">
+                        <tr><td>
                     {% load static %}
-                    <img src="{% static picture_url %}" alt="img"/>
+                    <img src="{% static pro_pic.picture %}" alt="img"/>
                     <br>
                     {% if account_updated %}
 
@@ -76,29 +81,37 @@
 
 
                             {% endif %}
-                    Titel: {{title}}
-                    <br>
-                    Accountname: {{username}}
-                    <br>
-                    Name: {{last_name}}
-                    <br>
-                    Email-Adresse: {{email}}
-                    <br>
-                    Account-Art: {{account}}
-                    <br>
-                    Zuletzt angemeldet: {{lastlogin}}
+
+                        </td>
+                            <td>
+                    <table align="center" style="margin: 0px auto;">
+                        <tr><td>Accountname:</td> <td>{{user.username}}</td></tr>
+                        <tr><td>Name:</td><td>{{user.last_name}}</td> </tr>
+                        <tr><td>Email-Adresse:</td> <td>{{user.email}}</td></tr>
+                        <tr><td>Account-Art:</td> <td>{{account}}</td></tr>
+                        <tr><td>Zuletzt angemeldet:</td> <td>{{user.last_login}}</td></tr>
+                        <tr><td>Angemeldet seit:</td> <td>{{user.date_joined}}</td></tr>
+                    </table>
+                        </td></tr>
+                    </table>
                     <br>
                     <input  type="submit" onclick="location.href='/account/update_account/';" value="Account bearbeiten" />
                     <br>
                     <input  type="submit" onclick="location.href='/account/update_picture/';" value="Profilbild wechseln" />
                     <br>
 
-                    <table border="5">
-                                <tr><th>Quiz: </th><th>Bestergebnis: </th></tr>
-                                {% for erg in best_erg_array_profile %}
-                            <tr><th> {{ erg }} </th><th> {{ erg.punkte }} Punkte </th></tr>
+                    <h4>Meine Highscores</h4>
+                    {% if not ergebnis %}
+                        Sie haben noch kein Quiz beendet 😞
+                        <br>
+                    {% else %}
+                    <table border="5" align="center" style="margin: 0px auto;">
+                        <tr><th>Quiz: </th><th>Bestergebnis: </th></tr>
+                        {% for erg in ergebnis_liste %}
+                        <tr><th> {{ erg.0 }} </th><th> {{ erg.1 }} Punkte </th></tr>
 
                         {% endfor %}
+                    {% endif %}
 
 
                             </table>

@@ -109,11 +109,14 @@
                             </div>
                             <input id="Weiter1" title="nächste Frag beantworten/Quiz beenden" type=submit value="Weiter" name="Weiter">
                             {% elif f %}
+                            <br>
+                            <a target="_blank" href="https://www.google.de/#q={{question.single_question_text}}"><input type="button" value="Mehr zur Frage recherchieren"></a>
                             <div class="alert alert-danger">
                         <strong>Schade!</strong> Die Antwort war leider Falsch.
-                            </div><
+                            </div>
                             <input id="Weiter2" title="nächste Frag beantworten/Quiz beenden" type=submit value="Weiter" name="Weiter">
-
+                            <br>
+                            <a target="_blank" href="https://www.google.de/#q={{question.single_question_text}}"><input type="button" value="Mehr zur Frage recherchieren"></a>
                             {% else %}
                            <input id="verifyAnswer" type=submit value="Fertig" name="Fertig">
                         {% endif %}

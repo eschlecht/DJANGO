@@ -91,12 +91,15 @@
                         <strong>Super!</strong> Die Antwort war richtig.
                             </div>
                         <input id="Weiter1" title="nächste Frag beantworten" type=submit value="Weiter" name="Weiter">
+                        <br>
+                        <a target="_blank" href="https://www.google.de/#q={{question.multi_question_text}}"><input type="button" value="Mehr zur Frage recherchieren"></a>
                         {% elif f %}
                         <div class="alert alert-danger">
                         <strong>Schade!</strong> Die Antwort war leider Falsch.
                         </div>
                         <input id="Weiter2" title="nächste Frag beantworten" type=submit value="Weiter" name="Weiter">
-
+                        <br>
+                        <a target="_blank" href="https://www.google.de/#q={{question.multi_question_text}}"><input type="button" value="Mehr zur Frage recherchieren"></a>
 
 
 

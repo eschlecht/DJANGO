@@ -90,20 +90,21 @@
                             <strong>{{course}}</strong> wurde gespeichert.
                             </div>
 
-
-
                             {% endif %}
 
                             {% for course in all_course %}
-                            <li>
-                                {{ course.course_title }}
+                                <hr>
+                                <h4>{{ course.course_title }}</h4>
                                 <input type="button" onclick="location.href='/quiz/delete_course/{{course.id}}/'" value="Löschen"/>
                                 <input type="button" onclick="location.href='/quiz/add_course/{{course.id}}/'" value="Bearbeiten"/>
 
                                 <br>
 
-                            </li>
                             {% endfor %}
+                            {% if empty is True %}
+                                <h4>Suche ohne Ergebnis :(</h4><br>
+                                Tipp: Anfang des Kursnamens eingeben.
+                            {% endif %}
                         </ul><br><br>
                 </div>
             </div>

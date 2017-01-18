@@ -1,6 +1,15 @@
+    <?php
+    	//UTF-8
+    	header('Content-Type: text/html; charset=utf-8');
+    ?>
 <!DOCTYPE html>
 <html lang="en">
+
+
+    <meta charset="utf-8">
 <head>
+    <meta http-equiv="content-type" content="text/html; charset=utf-8">
+    <meta charset="UTF-8">
     {% load staticfiles %}
     <link rel="stylesheet" href="//maxcdn.bootstrapcdn.com/bootstrap/3.2.0/css/bootstrap.min.css">
     <link rel="stylesheet" href="//maxcdn.bootstrapcdn.com/bootstrap/3.2.0/css/bootstrap-theme.min.css">
@@ -62,8 +71,14 @@
                 <div id="inhalt">
                     <br>
                 <div class="unten">
+                    {% if rename == 1 %}
+                    <h2>Quiz umbenennen!</h2>
+                    {% else %}
                     <h2>Hier Quiz hinzufügen!</h2>
+                    {% endif %}
                         <form id = "QuizForm" placeholder="Bitte Kurs auswählen" method="post" action="" >
+
+
                             {% for field in form.visible_fields %}
                                 {{field.errors}}
                                 {{field.help_text}}
@@ -92,8 +107,8 @@
 
 
                             {% endif %}
-                            <input type="submit" title="Quiz in der Datenbank speichern" name="submit" value="speichern"/>
-
+                            <input type="submit" title="Quiz in der Datenbank speichern" name="submit" value="Quiz speichern"/>
+                            <input type="submit" title="Quiz in der Datenbank speichern" name="submit2" value="Quiz speichern und befüllen"/>
                             <br>
                         </form>
                     <br>

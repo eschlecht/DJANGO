@@ -65,18 +65,8 @@ if(document.getElementById('auswahl1').clicked == true)
 </script>
         <div id="webseite" >
             <div id="header">
-                <h2> DJANGO UNCHAINED </h2>
-                <ul class="topnav" id="myTopnav">
-                    <li><a href="javascript:history.back()"><span class="glyphicon glyphicon-arrow-left"></span></a></li>
-                  <li><a href="#home" onclick="myFunction()" onclick="location.href='/quiz/';">Hauptmenü</a></li>
-                  <li><a href="#news" onclick="location.href='/quiz/course_select/';">Quiz spielen</a></li>
-                  <li><a href="#about" onclick="location.href='/quiz/settings/';">Quiz konfigurieren</a></li>
-                  <li><a href="#about" onclick="location.href='/account/';">Account</a></li>
-                    <li><a href="javascript:history.forward()"><span class="glyphicon glyphicon-arrow-right"></span></a></li>
-                  <li class="icon">
-                    <a href="javascript:void(0);" onclick="myFunction()">&#9776;</a>
-                  </li>
-                </ul>
+
+                {% include "quiz/Navi.html" %}
 
             </div>
             <div id="main">
@@ -152,29 +142,7 @@ if(document.getElementById('auswahl1').clicked == true)
 
 
 
-                            <table border="5">
 
-                                {% for TFQuestion in tquestion %}
-                            <tr><th>{{ TFQuestion.tf_question_text }}</th></tr>
-
-                        {% endfor %}
-                        {% for EssayQuestion in equestion %}
-                            <tr><th>{{ EssayQuestion.essay_question_text}} </th></tr>
-                        {% endfor %}
-                        {% for SingleChoiceQuestion in squestion %}
-                            <tr><th>{{ SingleChoiceQuestion.single_question_text }}</th></tr>
-
-                        {% endfor %}
-                        {% for MultipleChoiceQuestion in mquestion %}
-                            <tr> <th>{{ MultipleChoiceQuestion.multi_question_text }}</th></tr>
-
-                        {% endfor %}
-
-
-
-
-
-                            </table>
 
 
 
