@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 from __future__ import division
 
 from itertools import chain
@@ -264,7 +265,7 @@ def add_question(request, quiz_id):
                                   {'form': form, 'quiz_id': quiz_id, 'Question': "Begriffs Frage",
                                    'tquestion': tquestion,
                                    'equestion': equestion,
-                                   'sequestion': squestion, 'user': user,
+                                   'squestion': squestion, 'user': user,
                                    'mquestion': mquestion, 'pro_pic': pro_pic}, context)
 
     if request.POST.get('single') == 'single':
@@ -273,7 +274,7 @@ def add_question(request, quiz_id):
                                   {'form': form, 'quiz_id': quiz_id, 'Question': "Single Choice Question",
                                    'tquestion': tquestion,
                                    'equestion': equestion,
-                                   'sequestion': squestion, 'user': user,
+                                   'squestion': squestion, 'user': user,
                                    'mquestion': mquestion, 'pro_pic': pro_pic}, context)
 
     if request.POST.get('multi') == 'MultipleChoice Frage':
@@ -282,7 +283,7 @@ def add_question(request, quiz_id):
                                   {'form': form, 'quiz_id': quiz_id, 'Question': "Multiple Choice Frage", 'a': True,
                                    'tquestion': tquestion,
                                    'equestion': equestion,
-                                   'sequestion': squestion, 'user': user,
+                                   'squestion': squestion, 'user': user,
                                    'mquestion': mquestion, 'pro_pic': pro_pic}, context)
 
     if request.POST.get('truefalse') == 'WahrFalsch Frage':
@@ -291,7 +292,7 @@ def add_question(request, quiz_id):
                                   {'form': form, 'quiz_id': quiz_id, 'Question': "Wahr/Falsch Frage", 'b': True,
                                    'tquestion': tquestion,
                                    'equestion': equestion,
-                                   'sequestion': squestion, 'user': user,
+                                   'squestion': squestion, 'user': user,
                                    'mquestion': mquestion, 'pro_pic': pro_pic}, context)
 
     if request.POST.get('essay_question_text'):
@@ -306,7 +307,7 @@ def add_question(request, quiz_id):
                                   {'form': form, 'quiz_id': quiz_id, 'Question': "Begriffs Frage",
                                    'tquestion': tquestion,
                                    'equestion': equestion,
-                                   'sequestion': squestion, 'user': user,
+                                   'squestion': squestion, 'user': user,
                                    'mquestion': mquestion, 'saved': True, 'saved_question': q_obj, 'pro_pic': pro_pic},
                                   context)
 
@@ -323,7 +324,7 @@ def add_question(request, quiz_id):
         return render_to_response('quiz/addquestionselect.html',
                                   {'form': form, 'quiz_id': quiz_id, 'tquestion': tquestion,
                                    'equestion': equestion,
-                                   'sequestion': squestion, 'user': user,
+                                   'squestion': squestion, 'user': user,
                                    'mquestion': mquestion, 'saved': True, 'saved_question': scq_obj,
                                    'pro_pic': pro_pic}, context)
 
@@ -345,7 +346,7 @@ def add_question(request, quiz_id):
                                   {'form': form, 'quiz_id': quiz_id, 'Question': "True or False Question", 'b': True,
                                    'tquestion': tquestion,
                                    'equestion': equestion,
-                                   'sequestion': squestion, 'user': user,
+                                   'squestion': squestion, 'user': user,
                                    'mquestion': mquestion, 'saved': True, 'saved_question': mq_obj, 'pro_pic': pro_pic},
 
                                   context)
@@ -392,13 +393,13 @@ def add_question(request, quiz_id):
     return render_to_response('quiz/addquestionselect.html',
                               {'form': form, 'quiz_id': quiz_id, 'Question': "Begriffs Frage", 'tquestion': tquestion,
                                'equestion': equestion,
-                               'sequestion': squestion, 'user': user,
+                               'squestion': squestion, 'user': user,
                                'mquestion': mquestion, 'pro_pic': pro_pic}, context)
 
     if request.POST.get('fertig'):
         return render(request, 'quiz/add_quiz.html', {'tquestion': tquestion,
                                                       'equestion': equestion,
-                                                      'sequestion': squestion,
+                                                      'squestion': squestion,
                                                       'mquestion': mquestion, 'pro_pic': pro_pic}, context)
 
 
@@ -513,7 +514,9 @@ def delete_quiz(request, quiz_id):
     quiz = get_object_or_404(Quiz, id=quiz_id)
     global deleted_quiz
     deleted_quiz = quiz
-
+    for q in Ergebnis.objects.all():
+        if q.quiz == quiz_id:
+            q.delete()
     quiz.delete()
     print('Quiz mit ID', quiz_id, 'deleted.')
     global quiz_delete
@@ -578,7 +581,7 @@ def delete_question(request, quiz_id):
                                                               multi_question_text__startswith=search_query)
             return render(request, 'quiz/delete_question.html', {'tquestion': tquestion,
                                                                  'equestion': equestion,
-                                                                 'sequestion': squestion, 'quiz': quiz,
+                                                                 'squestion': squestion, 'quiz': quiz,
                                                                  'mquestion': mquestion, 'pro_pic': pro_pic}, context)
         else:
             tquestion = TFQuestion.objects.filter(quizfk_id=quiz_id)
@@ -587,7 +590,7 @@ def delete_question(request, quiz_id):
             mquestion = MultipleChoiceQuestion.objects.filter(quizfk_id=quiz_id)
         return render(request, 'quiz/delete_question.html', {'tquestion': tquestion,
                                                              'equestion': equestion,
-                                                             'sequestion': squestion, 'quiz': quiz,
+                                                             'squestion': squestion, 'quiz': quiz,
                                                              'mquestion': mquestion, 'pro_pic': pro_pic}, context)
     else:
         question_delete = 0
@@ -601,7 +604,7 @@ def delete_question(request, quiz_id):
                                                               multi_question_text__startswith=search_query)
             return render(request, 'quiz/delete_question.html', {'tquestion': tquestion,
                                                                  'equestion': equestion,
-                                                                 'sequestion': squestion, 'quiz': quiz,
+                                                                 'squestion': squestion, 'quiz': quiz,
                                                                  'mquestion': mquestion, 'delete': True,
                                                                  'deleted_question': deleted_question,
                                                                  'pro_pic': pro_pic}, context)
@@ -612,7 +615,7 @@ def delete_question(request, quiz_id):
             mquestion = MultipleChoiceQuestion.objects.filter(quizfk_id=quiz_id)
         return render(request, 'quiz/delete_question.html', {'tquestion': tquestion,
                                                              'equestion': equestion,
-                                                             'sequestion': squestion, 'quiz': quiz,
+                                                             'squestion': squestion, 'quiz': quiz,
                                                              'mquestion': mquestion, 'delete': True,
                                                              'deleted_question': deleted_question, 'pro_pic': pro_pic},
                       context)
@@ -798,7 +801,7 @@ def update_question(request):
             mquestion = MultipleChoiceQuestion.objects.filter(multi_question_text__startswith=search_query)
             return render(request, 'quiz/update_question.html', {'tquestion': tquestion,
                                                                  'equestion': equestion,
-                                                                 'sequestion': squestion,
+                                                                 'squestion': squestion,
                                                                  'mquestion': mquestion, 'pro_pic': pro_pic}, context)
         else:
             tquestion = TFQuestion.objects.all()
@@ -807,7 +810,7 @@ def update_question(request):
             mquestion = MultipleChoiceQuestion.objects.all()
         return render(request, 'quiz/update_question.html', {'tquestion': tquestion,
                                                              'equestion': equestion,
-                                                             'sequestion': squestion,
+                                                             'squestion': squestion,
                                                              'mquestion': mquestion, 'pro_pic': pro_pic}, context)
     else:
         question_delete = 0
@@ -819,7 +822,7 @@ def update_question(request):
             mquestion = MultipleChoiceQuestion.objects.filter(multi_question_text__startswith=search_query)
             return render(request, 'quiz/update_question.html', {'tquestion': tquestion,
                                                                  'equestion': equestion,
-                                                                 'sequestion': squestion,
+                                                                 'squestion': squestion,
                                                                  'mquestion': mquestion, 'delete': True,
                                                                  'deleted_question': deleted_question,
                                                                  'pro_pic': pro_pic}, context)
@@ -830,7 +833,7 @@ def update_question(request):
             mquestion = MultipleChoiceQuestion.objects.all()
         return render(request, 'quiz/update_question.html', {'tquestion': tquestion,
                                                              'equestion': equestion,
-                                                             'sequestion': squestion,
+                                                             'squestion': squestion,
                                                              'mquestion': mquestion, 'delete': True,
                                                              'deleted_question': deleted_question, 'pro_pic': pro_pic},
                       context)
@@ -1453,6 +1456,8 @@ def answer_quiz(request, quiz_id):
 
 def lobbys(request):
     entryLobby = EntryLobbyForm(request.POST)
+    user_rank = get_object_or_404(UserRank, user_fk_id=request.user.id)
+    pro_pic = get_object_or_404(ProfilePicture, id=user_rank.picture_id)
     try:
         if request.user.is_active is True:
             all_lobbys = Lobby.objects.all()
@@ -1473,7 +1478,7 @@ def lobbys(request):
                     print "label vorhanden"
                     return render_to_response('quiz/lobbys.html',
                                               {'all_lobbys': all_lobbys, 'lobby_form': lobby_form, 'duplicate': True,
-                                               'entryLobby': entryLobby},
+                                               'entryLobby': entryLobby, 'pro_pic': pro_pic},
                                               request)
             if request.POST.get('beitreten'):
                 print "beim beitreten"
@@ -1483,28 +1488,29 @@ def lobbys(request):
                     if putUserInLobby(request.user.id, request.POST.get('lobby_choice')) is True:
                         print "iwas"
                         return HttpResponseRedirect('lobby_entry/%s' % str(request.POST.get('lobby_choice')),
-                                                    {'notstart': True},
+                                                    {'notstart': True, 'pro_pic': pro_pic},
                                                     request)
                     else:
                         return render_to_response('quiz/lobbys.html', {'all_lobbys': all_lobbys, 'lobby_form': lobby_form,
-                                                                   'entryLobby': entryLobby,'lobbyStarted':True},
+                                                                   'entryLobby': entryLobby,'lobbyStarted':True, 'pro_pic': pro_pic},
                                               request)
 
                 else:
                     return render_to_response('quiz/lobbys.html', {'all_lobbys': all_lobbys, 'lobby_form': lobby_form,
-                                                                   'entryLobby': entryLobby,'pwWrong':True},
+                                                                   'entryLobby': entryLobby,'pwWrong':True, 'pro_pic': pro_pic},
                                               request)
             print "normal"
             return render_to_response('quiz/lobbys.html',
-                                      {'all_lobbys': all_lobbys, 'lobby_form': lobby_form, 'entryLobby': entryLobby},
+                                      {'all_lobbys': all_lobbys, 'lobby_form': lobby_form, 'entryLobby': entryLobby, 'pro_pic': pro_pic},
                                       request)
         else:
             print "not authorized"
             return render_to_response('quiz/index.html', {'b': True}, request)
-    except Exception:
+    except Exception as e:
+        print e.message
         print "exception in lobby"
         return render_to_response('quiz/lobbys.html',
-                                  {'all_lobbys': all_lobbys, 'lobby_form': lobby_form, 'entryLobby': entryLobby},
+                                  {'all_lobbys': all_lobbys, 'lobby_form': lobby_form, 'entryLobby': entryLobby, 'pro_pic': pro_pic},
                                   request)
 
 
@@ -1522,9 +1528,10 @@ def lobby_entry(request, lobby_id):
         if request.POST.get('starten'):
             print "ich will starten"
             start_quiz(lobby_id)
+            update_current_question(lobby_id,request.user.id)
             return render_to_response('quiz/lobby_entry.html',
                                       {'all_user': all_users_in_lobby,
-                                       'quiz': all_quiz[current_question_in_lobby.current_question],
+                                       'quiz': all_quiz[current_question_in_lobby.current_question+1],
                                        'start': True},
                                       request)
 
@@ -1623,6 +1630,7 @@ def lobby_entry(request, lobby_id):
     except IndexError as e:
         print e.message
         print "vorbei"
+        all_users_in_lobby = UserInLobby.objects.filter(lobby_id=lobby_id)
         points = UserInLobby.objects.get(user_id=request.user.id).points
         return HttpResponseRedirect('/quiz/lobbys/mfinish/', {'points': points}, request)
 
@@ -1638,7 +1646,6 @@ def lobby_entry(request, lobby_id):
 def mfinish(request):
     try:
         points = UserInLobby.objects.get(user_id=request.user.id)
-
         print "im finish"
         lobb_id = UserInLobby.objects.get(user_id=request.user.id).lobby_id
         quiz_id = Lobby.objects.get(id=lobb_id).quiz_id
@@ -1650,13 +1657,13 @@ def mfinish(request):
                 save_multiplayer_points(quizname,points.points,request.user.id)
                 Lobby.objects.get(id=lobb_id).delete()
                 UserInLobby.objects.get(user_id=request.user.id).delete()
-
                 return HttpResponseRedirect('/quiz/lobbys')
             else:
                 print "nicht owner von lobby"
                 save_multiplayer_points(quizname, points.points, request.user.id)
                 UserInLobby.objects.get(user_id=request.user.id).delete()
                 return HttpResponseRedirect('/quiz/lobbys')
+
         return render_to_response('quiz/mfinish.html', {'points': points.points}, request)
     except Exception:
         return HttpResponseRedirect('/quiz/')
@@ -1690,6 +1697,7 @@ def return_quiz(lobby_id):
         mcq_query = MultipleChoiceQuestion.objects.filter(quizfk_id=Lobby.objects.filter(id=lobby_id).first().quiz_id)
         ess_query = EssayQuestion.objects.filter(quizfk_id=Lobby.objects.filter(id=lobby_id).first().quiz_id)
         quiz = list(chain(tf_query, mcq_query, ess_query))
+        print "quiz returned"
         return quiz
     except Exception:
         return Exception

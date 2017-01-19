@@ -25,7 +25,7 @@ class Ergebnis(models.Model):
     user_id = models.IntegerField()
 
 
-    def __str__(self):
+    def __int__(self):
         return self.quiz
 
 

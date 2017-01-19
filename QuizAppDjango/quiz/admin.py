@@ -2,8 +2,8 @@ from django.contrib import admin
 
 # Register your models here.
 
-from .models import Quiz,Lobby,UserInLobby,EssayQuestion,TFQuestion,MultipleChoiceQuestion,ProposeEssayQuestion,ProposeMultipleChoiceQuestion,ProposeTFQuestion,MultiplayerErgebnis,Ergebnis,Course
-
+from .models import Quiz,Lobby,UserInLobby,EssayQuestion,TFQuestion,MultipleChoiceQuestion,ProposeEssayQuestion,ProposeMultipleChoiceQuestion,ProposeTFQuestion,MultiplayerErgebnis,Ergebnis,Course,SingleChoiceQuestion
+from account.models import UserRank
 admin.site.register(Quiz)
 admin.site.register(Lobby)
 admin.site.register(UserInLobby)
@@ -16,3 +16,5 @@ admin.site.register(ProposeEssayQuestion)
 admin.site.register(MultiplayerErgebnis)
 admin.site.register(Course)
 admin.site.register(Ergebnis)
+admin.site.register(UserRank)
+admin.site.register(SingleChoiceQuestion)
